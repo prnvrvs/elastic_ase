@@ -1,0 +1,12 @@
+README.md
+setup.py
+elastic_ase/__init__.py
+elastic_ase/average.py
+elastic_ase/calculator.py
+elastic_ase/deformations.py
+elastic_ase/solvers.py
+elastic_ase.egg-info/PKG-INFO
+elastic_ase.egg-info/SOURCES.txt
+elastic_ase.egg-info/dependency_links.txt
+elastic_ase.egg-info/requires.txt
+elastic_ase.egg-info/top_level.txt
