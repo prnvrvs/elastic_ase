@@ -25,7 +25,10 @@ def auto_detect_symmetry(atoms):
         elif 168 <= spg <= 194:
             return "hexagonal"
         elif 143 <= spg <= 167:
-            return "trigonal_1"
+            # Route all trigonal groups to trigonal_2 because it simultaneously fits C14 and C15.
+            # This avoids silent errors in '31m'-type groups (P-31m, P-31c, P31m, etc.)
+            # and works for any arbitrary in-plane rotation about z.
+            return "trigonal_2"
         elif 75 <= spg <= 142:
             return "orthogonal"  # tetragonal treated as orthogonal
         elif 16 <= spg <= 74:
@@ -36,6 +39,60 @@ def auto_detect_symmetry(atoms):
             return "triclinic"
     except Exception:
         return "cubic"
+
+def validate_orientation(atoms, symmetry, verbose=True):
+    """
+    Checks for common crystallographic orientation pitfalls:
+    1. Trigonal/Hexagonal: c-axis must be along z (cell[2] || z).
+    2. Rhombohedral: 3-fold axis along [111] must be in hexagonal setting (c || z).
+    3. Monoclinic: unique axis must be b (beta != 90, alpha = gamma = 90).
+    """
+    warnings = []
+    cell = atoms.get_cell()
+    angles = cell.angles()
+    lengths = cell.lengths()
+    sym = symmetry.lower().strip()
+
+    if sym in ["hexagonal", "hex", "trigonal_1", "trigonal_2", "trigonal1", "trigonal2"]:
+        # Rhombohedral check: a=b=c, alpha=beta=gamma != 90
+        if abs(lengths[0] - lengths[1]) < 0.05 and abs(lengths[1] - lengths[2]) < 0.05:
+            if abs(angles[0] - angles[1]) < 0.5 and abs(angles[1] - angles[2]) < 0.5 and abs(angles[0] - 90.0) > 1.0:
+                warnings.append(
+                    f"Rhombohedral cell detected (angles = {angles[0]:.1f}°). "
+                    "Trigonal calculations require the 3-fold axis along Cartesian z. "
+                    "Please convert to conventional hexagonal setting (c || z)."
+                )
+
+        # c-axis along z check
+        c_vec = cell[2]
+        c_len = np.linalg.norm(c_vec)
+        if c_len > 1e-4:
+            cos_z = abs(c_vec[2]) / c_len
+            if cos_z < 0.90:
+                warnings.append(
+                    f"Hexagonal/Trigonal c-axis is tilted (|cos theta_z| = {cos_z:.2f} < 0.90). "
+                    "The c-axis must be oriented parallel to Cartesian z."
+                )
+
+    elif sym in ["monoclinic"]:
+        alpha, beta, gamma = angles
+        if abs(gamma - 90.0) > 1.5 and abs(beta - 90.0) < 1.0:
+            warnings.append(
+                f"Monoclinic cell has unique axis c (gamma = {gamma:.1f}°, beta = {beta:.1f}°). "
+                "ElasticASE assumes standard unique axis b (alpha=gamma=90°, beta != 90°). "
+                "Please permute axes so the 2-fold unique axis is along y."
+            )
+        elif abs(alpha - 90.0) > 1.5 and abs(beta - 90.0) < 1.0:
+            warnings.append(
+                f"Monoclinic cell has unique axis a (alpha = {alpha:.1f}°). "
+                "ElasticASE assumes standard unique axis b. Permute axes so unique axis is along y."
+            )
+
+    if verbose:
+        for w in warnings:
+            print(f"[ElasticASE Warning] {w}")
+
+    return warnings
 
 class ElasticASE:
     """
@@ -66,6 +123,9 @@ class ElasticASE:
                 print(f"[ElasticASE] Auto-detected crystal symmetry: '{self.symmetry}'")
         else:
             self.symmetry = symmetry.lower().strip()
+
+        # Validate crystallographic orientation against common pitfalls
+        self.orientation_warnings = validate_orientation(self.atoms, self.symmetry, verbose=self.verbose)
 
         if strains is None:
             self.strains = np.array([-0.01, -0.005, 0.0, 0.005, 0.01])

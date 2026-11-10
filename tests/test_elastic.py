@@ -108,6 +108,33 @@ class TestElasticASE(unittest.TestCase):
         self.assertAlmostEqual(C[1, 4], -10.0)  # C25 = -C15
         self.assertAlmostEqual(C[3, 5], -10.0)  # C46 = -C15
 
+    def test_orientation_warnings(self):
+        from elastic_ase.calculator import validate_orientation
+        from ase import Atoms
+
+        # 1. Rhombohedral cell check
+        bi = bulk("Bi", "rhombohedral", a=4.75, alpha=57.2)
+        warn_rhombo = validate_orientation(bi, "trigonal_2", verbose=False)
+        self.assertTrue(any("Rhombohedral cell detected" in w for w in warn_rhombo))
+
+        # 2. Hexagonal tilted c-axis check (c along x)
+        co = bulk("Co", "hcp", a=2.5, c=4.0)
+        c_orig = co.get_cell()
+        co.set_cell([c_orig[2], c_orig[1], c_orig[0]], scale_atoms=True)
+        warn_hex = validate_orientation(co, "hexagonal", verbose=False)
+        self.assertTrue(any("c-axis is tilted" in w for w in warn_hex))
+
+        # 3. Monoclinic with unique axis c (gamma != 90)
+        mono_c = Atoms("C", cell=[[3.0, 0, 0], [1.0, 4.0, 0], [0, 0, 5.0]], pbc=True)
+        warn_mono = validate_orientation(mono_c, "monoclinic", verbose=False)
+        self.assertTrue(any("unique axis c" in w for w in warn_mono))
+
+    def test_trigonal_auto_routes_to_trigonal_2(self):
+        from elastic_ase.calculator import auto_detect_symmetry
+        bi = bulk("Bi", "rhombohedral", a=4.75, alpha=57.2)
+        sym = auto_detect_symmetry(bi)
+        self.assertEqual(sym, "trigonal_2")
+
 
     def test_cli_execution(self):
         import tempfile

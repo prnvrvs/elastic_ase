@@ -115,3 +115,27 @@ Or with `pytest`:
 ```bash
 pytest tests/
 ```
+
+---
+
+## Crystallographic Conventions & Common Pitfalls
+
+To prevent silent errors common in legacy elastic calculation codes, `ElasticASE` implements automatic validation and robust symmetry routing:
+
+1. **Trigonal Systems & "31m"-Type Groups ($P\bar{3}1m, P\bar{3}1c, P31m, P31c, P312, P3_1 12, P3_2 12$):**
+   - In standard settings with $a \parallel x$, the 2-fold axes in 31m-type groups are perpendicular to $a$, causing the stiffness matrix to have $C_{15}$ rather than $C_{14}$.
+   - **Solution in ElasticASE:** Automatic symmetry detection routes all trigonal crystals to `trigonal_2`. This simultaneously fits both $C_{14}$ and $C_{15}$, making it completely invariant to in-plane rotation about $z$ with only 1 extra deformation mode.
+
+2. **Rhombohedral Cells with 3-Fold Axis along $[111]$:**
+   - Both `trigonal_1` and `trigonal_2` strain tensors require the 3-fold axis to lie along Cartesian $z$.
+   - Primitive rhombohedral cells with equal angles (e.g., $a=b=c, \alpha=\beta=\gamma \ne 90^\circ$) have the 3-fold axis along $[111]$.
+   - **Solution:** Convert the structure to the conventional hexagonal setting ($c \parallel z$) using `spglib` or ASE before running `ElasticASE`. A warning is automatically raised if an unconverted rhombohedral cell is detected.
+
+3. **Monoclinic Structures (Unique Axis $b$ vs $c$):**
+   - `ElasticASE` assumes standard International Tables convention: **unique axis $b$** ($\alpha = \gamma = 90^\circ$, $\beta \ne 90^\circ$).
+   - If a structure is defined with unique axis $c$ ($\gamma \ne 90^\circ$), `ElasticASE` issues a warning to permute the axes before running.
+
+4. **Hexagonal or Trigonal Cells with $c$ along $x$:**
+   - Hexagonal and trigonal deformation matrices require the principal rotation axis $c$ to be parallel to Cartesian $z$ (`cell[2] || z`).
+   - `ElasticASE` automatically checks the projection of the $c$-vector on $z$ and issues a warning if misalignment is detected.
+
