@@ -63,6 +63,52 @@ class TestElasticASE(unittest.TestCase):
         self.assertLessEqual(avg["K_VRH"], avg["K_voigt"] + 1e-4)
         self.assertGreater(avg["Pugh_ratio"], 0)
 
+    def test_monoclinic_deformation_specs(self):
+        from elastic_ase.deformations import get_deformation_specs
+        specs = dict(get_deformation_specs("monoclinic"))
+        def_func_II = specs["C44_C66_C46_II"]
+        # Must strain epsilon_4 and epsilon_6 (indices 3 and 5), NOT epsilon_5 (index 4)
+        d1, d2, d3, d4, d5, d6 = def_func_II(0.01)
+        self.assertEqual(d4, 0.01)
+        self.assertEqual(d5, 0.0)
+        self.assertEqual(d6, -0.01)
+
+    def test_monoclinic_solver_signs(self):
+        from elastic_ase.solvers import solve_stiffness
+        # Create coefficients where C15 > 0 and C46 > 0
+        # H = 0.5*(C11 + C55) + C15, I = 0.5*(C11 + C55) - C15 -> H - I = 2*C15
+        coeffs = {
+            "C11_C22_C12_I": 50.0, "C11_C22_C12_II": 150.0,
+            "C22_C33_C23_I": 50.0, "C22_C33_C23_II": 150.0,
+            "C11_C33_C13_I": 50.0, "C11_C33_C13_II": 150.0,
+            "C44": 25.0,
+            "C11_C55_C15_I": 120.0,  # H
+            "C11_C55_C15_II": 80.0,  # I -> C15 = (120 - 80)/2 = +20
+            "C22_C55_C25": 100.0,
+            "C33_C55_C35": 100.0,
+            "C44_C66_C46_I": 90.0,   # L
+            "C44_C66_C46_II": 70.0,  # M -> C46 = (90 - 70)/2 = +10
+        }
+        C = solve_stiffness("monoclinic", coeffs)
+        self.assertAlmostEqual(C[0, 4], 20.0)  # C15
+        self.assertAlmostEqual(C[3, 5], 10.0)  # C46
+
+    def test_trigonal_2_c15_sign(self):
+        from elastic_ase.solvers import solve_stiffness
+        # G = 0.5*(C11 + C44) - C15 -> C15 = 0.5*(C11 + C44) - G
+        # If C11 = 100, C44 = 40, and C15 = +10 -> G = 70 - 10 = 60
+        coeffs = {
+            "C11_C12_I": 120.0, "C11_C12_II": 80.0,  # C11 = 100, C12 = 20
+            "C11_C33_C13_I": 110.0, "C11_C33_C13_II": 90.0,
+            "C11_C44_C14_I": 75.0, "C11_C44_C14_II": 65.0,  # C44 = 40, C14 = 5
+            "C11_C44_C15": 60.0  # G -> C15 = 0.5*(100 + 40) - 60 = +10
+        }
+        C = solve_stiffness("trigonal_2", coeffs)
+        self.assertAlmostEqual(C[0, 4], 10.0)   # C15
+        self.assertAlmostEqual(C[1, 4], -10.0)  # C25 = -C15
+        self.assertAlmostEqual(C[3, 5], -10.0)  # C46 = -C15
+
+
     def test_cli_execution(self):
         import tempfile
         from elastic_ase.cli import main as cli_main

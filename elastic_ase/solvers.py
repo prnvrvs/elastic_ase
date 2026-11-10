@@ -158,7 +158,7 @@ def solve_stiffness(symmetry, coeffs):
         C13 = (C_c - D) / 2.0
         C44 = (E + F) - C11
         C14 = (E - F) / 2.0
-        C15 = G - (C11 / 2.0) - (C44 / 2.0)
+        C15 = (C11 + C44) / 2.0 - G
         C66 = (C11 - C12) / 2.0
 
         C = np.array([
@@ -201,11 +201,11 @@ def solve_stiffness(symmetry, coeffs):
         C13 = FF
         C44 = G * 2.0
         C55 = (H + I) - C11
-        C15 = (I - H) / 2.0
+        C15 = (H - I) / 2.0
         C25 = J - (C22 / 2.0) - (C55 / 2.0)
         C35 = K - (C33 / 2.0) - (C55 / 2.0)
         C66 = (L + M) - C44
-        C46 = (M - L) / 2.0
+        C46 = (L - M) / 2.0
 
         C = np.array([
             [C11, C12, C13, 0.0, C15, 0.0],

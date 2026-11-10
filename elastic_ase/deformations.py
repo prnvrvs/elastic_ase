@@ -71,7 +71,7 @@ def get_deformation_specs(symmetry):
             ("C22_C55_C25", lambda s: (0.0, s, 0.0, 0.0, s, 0.0)),
             ("C33_C55_C35", lambda s: (0.0, 0.0, s, 0.0, s, 0.0)),
             ("C44_C66_C46_I", lambda s: (0.0, 0.0, 0.0, s, 0.0, s)),
-            ("C44_C66_C46_II", lambda s: (0.0, 0.0, 0.0, 0.0, s, -s)),
+            ("C44_C66_C46_II", lambda s: (0.0, 0.0, 0.0, s, 0.0, -s)),
         ]
     elif sym in ["triclinic"]:
         return [
