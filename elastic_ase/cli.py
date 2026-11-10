@@ -56,6 +56,13 @@ def parse_args(args=None):
         help="Optional output file path to save results (JSON or CSV format based on extension)."
     )
     parser.add_argument(
+        "--no-reorient",
+        dest="reorient",
+        action="store_false",
+        default=True,
+        help="Disable automatic crystallographic reorientation/standardization."
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress detailed terminal output."
@@ -89,6 +96,7 @@ def main(args=None):
         atoms,
         symmetry=parsed.symmetry,
         strains=strain_list,
+        reorient=parsed.reorient,
         verbose=not parsed.quiet
     )
     results = el.calculate()

@@ -136,6 +136,45 @@ class TestElasticASE(unittest.TestCase):
         self.assertEqual(sym, "trigonal_2")
 
 
+    def test_poscar_auto_reorientation(self):
+        import tempfile
+        from ase.io import read as ase_read
+
+        # Standard reference untilted Ni
+        ni_ref = bulk("Ni", "hcp", a=2.50, c=4.08)
+        ni_ref.calc = EMT()
+        el_ref = ElasticASE(ni_ref, symmetry="hexagonal", verbose=False)
+        res_ref = el_ref.calculate()
+
+        # Tilted Ni (c axis along x) written to POSCAR format
+        ni_tilted = bulk("Ni", "hcp", a=2.50, c=4.08)
+        ni_tilted.rotate(90, 'y', rotate_cell=True)
+
+        with tempfile.NamedTemporaryFile(suffix=".vasp", delete=False) as f:
+            poscar_path = f.name
+
+        try:
+            ni_tilted.write(poscar_path, format="vasp")
+            # Read POSCAR
+            atoms_from_poscar = ase_read(poscar_path, format="vasp")
+            atoms_from_poscar.calc = EMT()
+
+            # ElasticASE should detect orientation, decide reorientation is required, and reorient
+            el_poscar = ElasticASE(atoms_from_poscar, verbose=False)
+            self.assertTrue(el_poscar.reoriented)
+            self.assertEqual(el_poscar.symmetry, "hexagonal")
+
+            res_poscar = el_poscar.calculate()
+            # Verified that elastic constants match reference down to numerical precision
+            np.testing.assert_allclose(
+                res_poscar["stiffness_matrix"],
+                res_ref["stiffness_matrix"],
+                atol=1e-2
+            )
+        finally:
+            if os.path.exists(poscar_path):
+                os.remove(poscar_path)
+
     def test_cli_execution(self):
         import tempfile
         from elastic_ase.cli import main as cli_main

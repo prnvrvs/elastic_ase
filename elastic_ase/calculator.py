@@ -94,6 +94,47 @@ def validate_orientation(atoms, symmetry, verbose=True):
 
     return warnings
 
+def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool = True):
+    """
+    Analyzes cell orientation and automatically standardizes/reorients the structure
+    using spglib if a non-standard crystallographic orientation is detected:
+    - Rhombohedral cells (3-fold along [111]) -> conventional hexagonal setting (c || z).
+    - Tilted hexagonal/trigonal cells (c tilted or along x/y) -> standard setting (c || z, a || x).
+    - Monoclinic cells with unique axis c or a -> standard setting (unique axis b || y).
+    - Rotated cubic/orthorhombic cells -> standard Cartesian alignment.
+    """
+    try:
+        import spglib
+        cell_data = (atoms.get_cell(), atoms.get_scaled_positions(), atoms.get_atomic_numbers())
+        dataset = spglib.get_symmetry_dataset(cell_data, symprec=symprec)
+        if dataset is None:
+            return atoms, False
+
+        spg = dataset.number
+        std_cell_data = spglib.standardize_cell(cell_data, to_primitive=False, symprec=symprec)
+        if std_cell_data is None:
+            return atoms, False
+
+        std_cell = std_cell_data[0]
+        # Check if cell changed substantially in orientation or basis
+        if not np.allclose(atoms.get_cell(), std_cell, atol=1e-3):
+            new_atoms = Atoms(
+                numbers=std_cell_data[2],
+                scaled_positions=std_cell_data[1],
+                cell=std_cell,
+                pbc=True
+            )
+            new_atoms.calc = atoms.calc
+            if verbose:
+                print(f"[ElasticASE] Reorientation: Standardized cell to conventional setting (Space group: {dataset.international} #{spg})")
+            return new_atoms, True
+
+        return atoms, False
+    except Exception as e:
+        if verbose:
+            print(f"[ElasticASE] Notice: auto-standardization skipped ({e})")
+        return atoms, False
+
 class ElasticASE:
     """
     ElasticASE: Compute second-order elastic constants for ASE Atoms objects with ANY ASE calculator.
@@ -106,19 +147,30 @@ class ElasticASE:
         strains = None,
         optimizer = None,
         fmax: float = 1e-3,
+        reorient: bool = True,
+        symprec: float = 1e-3,
         verbose: bool = True
     ):
         if atoms.calc is None:
             raise ValueError("The input ASE Atoms object must have a calculator attached (atoms.calc = ...).")
 
-        self.atoms = atoms.copy()
-        self.atoms.calc = atoms.calc
         self.verbose = verbose
         self.optimizer = optimizer
         self.fmax = fmax
+        self.symprec = symprec
+        self.reoriented = False
+
+        self.atoms = atoms.copy()
+        self.atoms.calc = atoms.calc
+
+        # Automatically decide and reorient structure if requested
+        if reorient:
+            self.atoms, self.reoriented = standardize_and_reorient(
+                self.atoms, symprec=self.symprec, verbose=self.verbose
+            )
 
         if symmetry == "auto":
-            self.symmetry = auto_detect_symmetry(atoms)
+            self.symmetry = auto_detect_symmetry(self.atoms)
             if self.verbose:
                 print(f"[ElasticASE] Auto-detected crystal symmetry: '{self.symmetry}'")
         else:
