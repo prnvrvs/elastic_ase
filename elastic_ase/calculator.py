@@ -126,10 +126,16 @@ class ElasticASE:
             y = delta_E / self.V0
             poly_coeffs = np.polyfit(self.strains, y, 2)
             a = poly_coeffs[0]
+            b = poly_coeffs[1]
 
             # In elastic_vasp convention: coeff = a * 160.21766208
             coeff_val = float(a * EV_TO_GPA)
             self.coeffs[mode_name] = coeff_val
+
+            # Residual stress warning if |b| is non-trivial (> 0.2 GPa)
+            residual_stress = abs(float(b * EV_TO_GPA))
+            if residual_stress > 0.2 and self.verbose:
+                print(f"  [Notice] Mode {mode_name}: residual stress |sigma_0| = {residual_stress:.2f} GPa")
 
             # Compute R^2 goodness of fit
             poly = np.poly1d(poly_coeffs)
@@ -188,3 +194,14 @@ class ElasticASE:
         print(f"  Cauchy Pressure      : {self.averages['Cauchy_pressure']:8.2f} GPa")
         print(f"  Zener Anisotropy A   : {self.averages['Zener_anisotropy']:8.2f}")
         print("=" * 70)
+
+    def __repr__(self):
+        status = "calculated" if self.stiffness is not None else "uncalculated"
+        return f"<ElasticASE(symmetry='{self.symmetry}', status='{status}')>"
+
+    def __str__(self):
+        if self.stiffness is None:
+            return f"ElasticASE(symmetry='{self.symmetry}', status='uncalculated')"
+        c11 = self.stiffness[0, 0]
+        stable = "Stable" if self.is_stable else "Unstable"
+        return f"ElasticASE(symmetry='{self.symmetry}', C11={c11:.2f} GPa, {stable})"

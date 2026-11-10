@@ -9,7 +9,13 @@ setup(
     install_requires=[
         "numpy",
         "pandas",
-        "ase"
+        "ase",
+        "spglib"
     ],
+    entry_points={
+        "console_scripts": [
+            "elastic-ase=elastic_ase.cli:main"
+        ]
+    },
     python_requires=">=3.8",
 )

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elastic-ase"
+version = "0.1.0"
+description = "Second-order elastic constants calculation package for ASE (Atomic Simulation Environment)"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Antigravity" }
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "ase",
+    "spglib"
+]
+
+[project.scripts]
+elastic-ase = "elastic_ase.cli:main"
