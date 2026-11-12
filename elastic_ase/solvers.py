@@ -15,12 +15,13 @@ def check_mechanical_stability(stiffness, symmetry="cubic"):
         C11, C12, C13, C33, C44 = C[0, 0], C[0, 1], C[0, 2], C[2, 2], C[3, 3]
         a = 2.0 * (C13 ** 2)
         b = C33 * (C11 + C12)
-        stable = (C11 > abs(C12)) and (C44 > 0) and ((C11 - C12) > 0) and (a < b)
-        criteria = "C11 > |C12| and C44 > 0 and C11 - C12 > 0 and 2*C13^2 < C33*(C11 + C12)"
+        stable = (C11 > abs(C12)) and (C44 > 0) and (C33 > 0) and ((C11 - C12) > 0) and (a < b)
+        criteria = "C11 > |C12| and C44 > 0 and C33 > 0 and C11 - C12 > 0 and 2*C13^2 < C33*(C11 + C12)"
     else:
-        # General positive-definite condition: all eigenvalues must be positive
-        eigenvalues = np.linalg.eigvals(C)
-        stable = bool(np.all(np.real(eigenvalues) > 0))
+        # General positive-definite condition: all eigenvalues must be strictly positive
+        C_sym = 0.5 * (C + C.T)
+        eigenvalues = np.linalg.eigvalsh(C_sym)
+        stable = bool(np.all(eigenvalues > 0))
         criteria = "All eigenvalues of stiffness matrix C > 0 (Positive Definite)"
 
     return stable, criteria
