@@ -53,6 +53,17 @@ def calculate_polycrystalline_averages(C):
     denom_A = C11 - C12
     anisotropy = (2.0 * C44) / denom_A if abs(denom_A) > 1e-12 else 1.0
 
+    # Universal elastic anisotropy index A^U (Ranganathan & Ostoja-Starzewski, PRL 2008)
+    # A^U = 5 * (G_voigt / G_reuss) + (K_voigt / K_reuss) - 6 >= 0 (0 for isotropic)
+    if G_reuss > 1e-6 and K_reuss > 1e-6:
+        universal_anisotropy = max(0.0, float(5.0 * (G_voigt / G_reuss) + (K_voigt / K_reuss) - 6.0))
+    else:
+        universal_anisotropy = 0.0
+
+    # Chung-Buessem fractional anisotropy
+    cb_G = (G_voigt - G_reuss) / (G_voigt + G_reuss) if (G_voigt + G_reuss) > 1e-6 else 0.0
+    cb_K = (K_voigt - K_reuss) / (K_voigt + K_reuss) if (K_voigt + K_reuss) > 1e-6 else 0.0
+
     return {
         "K_voigt": float(K_voigt),
         "K_reuss": float(K_reuss),
@@ -64,5 +75,8 @@ def calculate_polycrystalline_averages(C):
         "nu_VRH": float(nu_VRH),
         "Pugh_ratio": float(pugh),
         "Cauchy_pressure": float(cauchy),
-        "Zener_anisotropy": float(anisotropy)
+        "Zener_anisotropy": float(anisotropy),
+        "universal_anisotropy": float(universal_anisotropy),
+        "chung_buessem_G": float(cb_G),
+        "chung_buessem_K": float(cb_K)
     }

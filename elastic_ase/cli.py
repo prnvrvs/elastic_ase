@@ -151,9 +151,11 @@ def main(args=None):
             serializable = {
                 "symmetry": str(el.symmetry),
                 "stiffness_matrix": np.array(el.stiffness).tolist(),
+                "compliance_matrix": np.array(el.compliance).tolist(),
                 "is_stable": bool(el.is_stable),
                 "stability_criteria": str(el.stability_criteria),
                 "polycrystalline_averages": {k: float(v) for k, v in el.averages.items()},
+                "directional_properties": {k: float(v) if isinstance(v, (int, float, np.floating)) else v for k, v in el.directional.items()} if el.directional else None,
                 "r2_scores": {k: float(v) for k, v in el.r2_scores.items()}
             }
             with open(out_path, "w") as f:
@@ -168,8 +170,19 @@ def main(args=None):
                 "G_VRH_GPa": [el.averages["G_VRH"]],
                 "E_VRH_GPa": [el.averages["E_VRH"]],
                 "nu": [el.averages["nu_VRH"]],
-                "Pugh_ratio": [el.averages["Pugh_ratio"]]
+                "Pugh_ratio": [el.averages["Pugh_ratio"]],
+                "A_universal": [el.averages["universal_anisotropy"]]
             }
+            if el.directional:
+                data["E_min_GPa"] = [el.directional["E_min"]]
+                data["E_max_GPa"] = [el.directional["E_max"]]
+                data["E_anisotropy"] = [el.directional["E_anisotropy"]]
+                data["G_min_GPa"] = [el.directional["G_min"]]
+                data["G_max_GPa"] = [el.directional["G_max"]]
+                data["G_anisotropy"] = [el.directional["G_anisotropy"]]
+                data["nu_min"] = [el.directional["nu_min"]]
+                data["nu_max"] = [el.directional["nu_max"]]
+                data["Auxetic"] = [el.directional["is_auxetic"]]
             for i in range(6):
                 for j in range(6):
                     data[f"C{i+1}{j+1}_GPa"] = [round(float(el.stiffness[i, j]), 2)]

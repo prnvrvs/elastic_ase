@@ -260,6 +260,7 @@ class ElasticASE:
         self.r2_scores = {}
         self.stiffness = None
         self.averages = None
+        self.directional = None
         self.is_stable = False
         self.stability_criteria = ""
 
@@ -333,6 +334,7 @@ class ElasticASE:
         self.stiffness = solve_stiffness(self.symmetry, self.coeffs)
         self.is_stable, self.stability_criteria = check_mechanical_stability(self.stiffness, self.symmetry)
         self.averages = calculate_polycrystalline_averages(self.stiffness)
+        self.directional = self.directional_analysis()
 
         if self.verbose:
             self._print_report()
@@ -342,6 +344,7 @@ class ElasticASE:
             "is_stable": self.is_stable,
             "stability_criteria": self.stability_criteria,
             "polycrystalline_averages": self.averages,
+            "directional_properties": self.directional,
             "coefficients": self.coeffs,
             "r2_scores": self.r2_scores
         }
@@ -374,7 +377,89 @@ class ElasticASE:
         print(f"  Pugh Ratio (K/G)     : {self.averages['Pugh_ratio']:8.2f}  (> 1.75 indicates ductile)")
         print(f"  Cauchy Pressure      : {self.averages['Cauchy_pressure']:8.2f} GPa")
         print(f"  Zener Anisotropy A   : {self.averages['Zener_anisotropy']:8.2f}")
+        print(f"  Universal Anisotropy : A^U = {self.averages['universal_anisotropy']:6.3f}  (0 indicates isotropic)")
+
+        if self.directional:
+            print("\n" + "-" * 70)
+            print(" Directional Elastic Extremes & Anisotropy (elastic-vis):")
+            print(f"  Young's Modulus E    : min = {self.directional['E_min']:8.2f} GPa, max = {self.directional['E_max']:8.2f} GPa  (Anisotropy: {self.directional['E_anisotropy']:.2f})")
+            print(f"  Shear Modulus G      : min = {self.directional['G_min']:8.2f} GPa, max = {self.directional['G_max']:8.2f} GPa  (Anisotropy: {self.directional['G_anisotropy']:.2f})")
+            aux = "YES (Auxetic behavior)" if self.directional["is_auxetic"] else "No"
+            print(f"  Poisson's Ratio nu   : min = {self.directional['nu_min']:8.3f},     max = {self.directional['nu_max']:8.3f}      (Negative nu: {aux})")
+            neg_lc = "YES (Negative LC)" if self.directional["is_negative_LC"] else "No"
+            print(f"  Linear Compress. LC  : min = {self.directional['LC_min']:8.2f},     max = {self.directional['LC_max']:8.2f} TPa⁻¹ (Negative LC: {neg_lc})")
         print("=" * 70)
+
+    @property
+    def compliance(self):
+        """6x6 Voigt compliance matrix S = C^-1 in 1/GPa."""
+        if self.stiffness is None:
+            raise RuntimeError("Must call calculate() before accessing compliance matrix.")
+        return np.linalg.inv(self.stiffness)
+
+    def directional_analysis(self):
+        """
+        Calculates directional elastic properties and extremes without requiring any plotting:
+        - Young's modulus E: min, max, anisotropy (E_max / E_min)
+        - Shear modulus G: min, max, anisotropy (G_max / G_min)
+        - Poisson's ratio nu: min, max, auxetic check
+        - Linear compressibility LC: min, max, negative LC check
+        """
+        if self.stiffness is None:
+            raise RuntimeError("Must call calculate() before performing directional analysis.")
+
+        try:
+            material = self.to_elastic_vis()
+            from elastic_vis.core import minimize, maximize
+
+            _, Emin = minimize(lambda x: material.Young(x), 2)
+            _, Emax = maximize(lambda x: material.Young(x), 2)
+            E_aniso = float(Emax / Emin) if Emin > 1e-6 else float("nan")
+
+            _, Gmin = minimize(lambda x: material.shear(x), 3)
+            _, Gmax = maximize(lambda x: material.shear(x), 3)
+            G_aniso = float(Gmax / Gmin) if Gmin > 1e-6 else float("nan")
+
+            _, nu_min = minimize(lambda x: material.Poisson(x), 3)
+            _, nu_max = maximize(lambda x: material.Poisson(x), 3)
+
+            _, lc_min = minimize(lambda x: material.LC(x), 2)
+            _, lc_max = maximize(lambda x: material.LC(x), 2)
+
+            self.directional = {
+                "E_min": float(Emin),
+                "E_max": float(Emax),
+                "E_anisotropy": float(E_aniso),
+                "G_min": float(Gmin),
+                "G_max": float(Gmax),
+                "G_anisotropy": float(G_aniso),
+                "nu_min": float(nu_min),
+                "nu_max": float(nu_max),
+                "is_auxetic": bool(nu_min < 0.0),
+                "LC_min": float(lc_min),
+                "LC_max": float(lc_max),
+                "is_negative_LC": bool(lc_min < 0.0),
+            }
+        except Exception:
+            self.directional = None
+
+        return self.directional
+
+    def Young(self, theta: float, phi: float) -> float:
+        """Directional Young's modulus along spherical angles (theta, phi) in GPa."""
+        return self.to_elastic_vis().Young([theta, phi])
+
+    def linear_compressibility(self, theta: float, phi: float) -> float:
+        """Directional Linear Compressibility along spherical angles (theta, phi) in 1000/GPa (TPa^-1)."""
+        return self.to_elastic_vis().LC([theta, phi])
+
+    def shear(self, theta: float, phi: float) -> tuple:
+        """Extremes of Shear Modulus (min, max) along direction (theta, phi) in GPa."""
+        return self.to_elastic_vis().shear2D([theta, phi])
+
+    def poisson(self, theta: float, phi: float) -> tuple:
+        """Extremes of Poisson's Ratio (min, max) along direction (theta, phi)."""
+        return self.to_elastic_vis().Poisson2D([theta, phi])
 
     def to_elastic_vis(self):
         """

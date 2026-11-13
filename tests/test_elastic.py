@@ -239,6 +239,37 @@ class TestElasticASE(unittest.TestCase):
             loaded = np.loadtxt(txt_path)
             np.testing.assert_allclose(loaded, el.stiffness)
 
+    def test_directional_properties_and_compliance(self):
+        al = bulk("Al", "fcc", a=4.05, cubic=True)
+        al.calc = EMT()
+
+        el = ElasticASE(al, symmetry="cubic", verbose=False)
+        res = el.calculate()
+
+        # Check compliance matrix S = C^-1
+        S = el.compliance
+        np.testing.assert_allclose(S @ el.stiffness, np.eye(6), atol=1e-5)
+
+        # Check directional properties calculated without plotting
+        dp = res["directional_properties"]
+        self.assertIsNotNone(dp)
+        self.assertGreater(dp["E_min"], 0)
+        self.assertGreaterEqual(dp["E_max"], dp["E_min"])
+        self.assertGreaterEqual(dp["E_anisotropy"], 1.0)
+        self.assertGreater(dp["G_min"], 0)
+        self.assertGreaterEqual(dp["G_max"], dp["G_min"])
+        self.assertIsInstance(dp["is_auxetic"], bool)
+        self.assertIsInstance(dp["is_negative_LC"], bool)
+
+        # Check direct directional methods
+        # In [001] direction: theta = 0
+        E_001 = el.Young(0.0, 0.0)
+        self.assertAlmostEqual(E_001, 1.0 / S[2, 2], places=3)
+
+        # Check Universal Anisotropy in averages
+        self.assertIn("universal_anisotropy", res["polycrystalline_averages"])
+        self.assertGreaterEqual(res["polycrystalline_averages"]["universal_anisotropy"], 0.0)
+
     def test_cli_execution(self):
         import tempfile
         from elastic_ase.cli import main as cli_main
