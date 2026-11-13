@@ -30,3 +30,7 @@ ENV/
 # Output data & logs
 *.log
 *.out
+
+# documentation build output
+docs/_build/
+docs/_generated/

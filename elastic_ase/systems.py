@@ -308,3 +308,15 @@ SYSTEMS = {
 
 # Aliases
 SYSTEMS["orthorhombic"] = SYSTEMS["orthogonal"]
+
+_ALIASES = {"hex": "hexagonal", "tetragonal": "tetragonal_1", "tetragonal1": "tetragonal_1",
+            "tetragonal2": "tetragonal_2", "trigonal1": "trigonal_1", "trigonal2": "trigonal_2"}
+
+
+def get_system(name):
+    """The CrystalSystem for a table name (or a common alias such as "orthorhombic")."""
+    key = str(name).lower().strip()
+    key = _ALIASES.get(key, key)
+    if key not in SYSTEMS:
+        raise ValueError(f"Unsupported symmetry: {name!r}. Choose from {sorted(set(SYSTEMS) - {'orthorhombic'})}.")
+    return SYSTEMS[key]

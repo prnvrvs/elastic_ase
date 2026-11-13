@@ -1,23 +1,53 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "elastic-ase"
-version = "0.0.1"
-description = "Second-order elastic constants calculation and anisotropic visualization package for ASE"
+dynamic = ["version"]
+description = "Second-order elastic constants from energy-strain calculations with ASE calculators"
 readme = "README.md"
-requires-python = ">=3.8"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+keywords = ["elastic constants", "stiffness", "ASE", "DFT", "VASP", "Quantum ESPRESSO", "materials science"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 authors = [
-    { name = "Antigravity" }
+    { name = "Pranav Kumar" }
 ]
 dependencies = [
     "numpy",
-    "pandas",
     "ase",
-    "spglib",
-    "elastic-vis"
+    "spglib>=2.4",
 ]
+
+[project.optional-dependencies]
+# elastic-vis (directional plots and extremes) is optional and not on PyPI; install it with
+#   pip install "git+https://github.com/prabhat7iitm/elastic-vis.git"
+# (PyPI does not accept packages whose dependencies point to GitHub)
+test = ["pytest"]
+doc = ["sphinx", "sphinx-book-theme"]
+
+[project.urls]
+Source = "https://github.com/prnvrvs/elastic_ase"
+Documentation = "https://prnvrvs.github.io/elastic_ase/"
+Issues = "https://github.com/prnvrvs/elastic_ase/issues"
 
 [project.scripts]
 elastic-ase = "elastic_ase.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "elastic_ase.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["elastic_ase*"]

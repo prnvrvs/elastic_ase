@@ -6,9 +6,10 @@ Allows calculating elastic constants directly from terminal for any structure fi
 import os
 import sys
 import argparse
+import csv
+import importlib
 import json
 import numpy as np
-import pandas as pd
 from ase.io import read
 from elastic_ase.calculator import ElasticASE
 from elastic_ase.symmetry import check_symmetry
@@ -33,8 +34,9 @@ def parse_args(args=None):
         "-c", "--calculator",
         type=str,
         default="emt",
-        choices=["emt", "grace"],
-        help="ASE calculator to use ('emt' for built-in test potential, 'grace' for GRACE foundation models)."
+        help="ASE calculator: 'emt' (built-in test potential), 'grace' (GRACE foundation model, "
+             "see --model), or any calculator as 'module:function', e.g. "
+             "'mace.calculators:mace_mp' (called without arguments)."
     )
     parser.add_argument(
         "-m", "--model",
@@ -77,7 +79,8 @@ def parse_args(args=None):
         dest="reorient",
         action="store_false",
         default=True,
-        help="Disable automatic crystallographic reorientation/standardization."
+        help="Keep the structure in its given orientation (default: rotate it rigidly into the "
+             "standard setting; cell and atoms are never changed)."
     )
     parser.add_argument(
         "-q", "--quiet",
@@ -117,6 +120,21 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
+def make_calculator(name, model=None):
+    """ASE calculator from a CLI name: "emt", "grace" or "module:function"."""
+    if name == "emt":
+        from ase.calculators.emt import EMT
+        return EMT()
+    if name == "grace":
+        os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+        from tensorpotential.calculator import grace_fm
+        return grace_fm(model)
+    if ":" in name:
+        module_name, function_name = name.split(":", 1)
+        return getattr(importlib.import_module(module_name), function_name)()
+    raise ValueError("use 'emt', 'grace' or 'module:function'")
+
+
 def main(args=None):
     parsed = parse_args(args)
 
@@ -133,13 +151,11 @@ def main(args=None):
     atoms = read(parsed.structure)
 
     # Attach calculator
-    if parsed.calculator == "emt":
-        from ase.calculators.emt import EMT
-        atoms.calc = EMT()
-    elif parsed.calculator == "grace":
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-        from tensorpotential.calculator import grace_fm
-        atoms.calc = grace_fm(parsed.model)
+    try:
+        atoms.calc = make_calculator(parsed.calculator, parsed.model)
+    except (ImportError, AttributeError, ValueError) as exc:
+        print(f"Error: cannot create calculator '{parsed.calculator}': {exc}", file=sys.stderr)
+        return 1
 
     # Parse strains
     strain_list = [float(x.strip()) for x in parsed.strains.split(",") if x.strip()]
@@ -203,7 +219,10 @@ def main(args=None):
             for i in range(6):
                 for j in range(6):
                     data[f"C{i+1}{j+1}_GPa"] = [round(float(active_matrix[i, j]), 2)]
-            pd.DataFrame(data).to_csv(out_path, index=False)
+            with open(out_path, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(list(data))
+                writer.writerow([column[0] for column in data.values()])
             if not parsed.quiet:
                 print(f"\n[ElasticASE] Saved results to {out_path}")
         else:

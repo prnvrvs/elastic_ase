@@ -8,8 +8,9 @@ Answers questions about a crystal before running calculations:
 - Works with both file paths (CIF, POSCAR, etc.) and `ase.Atoms` objects.
 """
 from dataclasses import dataclass, field
-import os
+
 import ase.io
+import numpy as np
 from ase import Atoms
 
 from elastic_ase import auto, orientation, _spglib
@@ -116,8 +117,6 @@ def check_symmetry(structure, symprec=auto.SYMPREC, verbose=True):
         source_name = str(structure)
         atoms = ase.io.read(source_name)
 
-    cell = (np_cell := np_cell if False else (np_cell := None))  # dummy
-    import numpy as np
     spg_cell = (np.asarray(atoms.get_cell(), float), atoms.get_scaled_positions(), atoms.numbers)
     dataset = _spglib.call("get_symmetry_dataset", spg_cell, symprec=symprec)
     if dataset is None:

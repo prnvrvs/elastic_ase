@@ -1,4 +1,5 @@
 import os
+import importlib.util
 import unittest
 import numpy as np
 from ase.build import bulk
@@ -111,23 +112,37 @@ class TestElasticASE(unittest.TestCase):
     def test_orientation_warnings(self):
         from elastic_ase.calculator import validate_orientation
         from ase import Atoms
+        import warnings
 
-        # 1. Rhombohedral cell check
+        def check(atoms, symmetry):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return validate_orientation(atoms, symmetry, verbose=False)
+
+        # Correctly oriented crystals: no warning
+        self.assertEqual(check(bulk("Cu", "fcc", a=3.6, cubic=True), "cubic"), [])
+        self.assertEqual(check(bulk("Cu", "fcc", a=3.6), "cubic"), [])  # primitive cell, cubic axes along x, y, z
+        self.assertEqual(check(bulk("Co", "hcp", a=2.5, c=4.0), "hexagonal"), [])
+
+        # 1. Rhombohedral Bi as built by ASE: 3-fold axis not along z
         bi = bulk("Bi", "rhombohedral", a=4.75, alpha=57.2)
-        warn_rhombo = validate_orientation(bi, "trigonal_2", verbose=False)
-        self.assertTrue(any("Rhombohedral cell detected" in w for w in warn_rhombo))
+        self.assertEqual(len(check(bi, "trigonal_2")), 1)
 
-        # 2. Hexagonal tilted c-axis check (c along x)
+        # 2. Hexagonal with the c axis along x
         co = bulk("Co", "hcp", a=2.5, c=4.0)
         c_orig = co.get_cell()
         co.set_cell([c_orig[2], c_orig[1], c_orig[0]], scale_atoms=True)
-        warn_hex = validate_orientation(co, "hexagonal", verbose=False)
-        self.assertTrue(any("c-axis is tilted" in w for w in warn_hex))
+        self.assertEqual(len(check(co, "hexagonal")), 1)
 
-        # 3. Monoclinic with unique axis c (gamma != 90)
+        # 3. Monoclinic with unique axis c (gamma != 90): the table expects the unique axis along y
         mono_c = Atoms("C", cell=[[3.0, 0, 0], [1.0, 4.0, 0], [0, 0, 5.0]], pbc=True)
-        warn_mono = validate_orientation(mono_c, "monoclinic", verbose=False)
-        self.assertTrue(any("unique axis c" in w for w in warn_mono))
+        self.assertEqual(len(check(mono_c, "monoclinic")), 1)
+
+        # 4. Cubic crystal rotated about z: cubic axes no longer along x, y
+        cu = bulk("Cu", "fcc", a=3.6, cubic=True)
+        cu.rotate(30, "z", rotate_cell=True)
+        self.assertEqual(len(check(cu, "cubic")), 1)
+        self.assertEqual(check(cu, "triclinic"), [])  # the full table fits any orientation
 
     def test_trigonal_auto_routes_to_trigonal_2(self):
         from elastic_ase.calculator import auto_detect_symmetry
@@ -210,6 +225,7 @@ class TestElasticASE(unittest.TestCase):
         self.assertAlmostEqual(C2[5, 0], 15.0)
         self.assertAlmostEqual(C2[5, 1], -15.0)
 
+    @unittest.skipUnless(importlib.util.find_spec("elastic_vis"), "elastic-vis not installed")
     def test_elastic_vis_visualization(self):
         import tempfile
         al = bulk("Al", "fcc", a=4.05, cubic=True)
@@ -250,8 +266,14 @@ class TestElasticASE(unittest.TestCase):
         S = el.compliance
         np.testing.assert_allclose(S @ el.stiffness, np.eye(6), atol=1e-5)
 
-        # Check directional properties calculated without plotting
+        # Check Universal Anisotropy in averages
+        self.assertIn("universal_anisotropy", res["polycrystalline_averages"])
+
+        # Directional properties need the optional elastic-vis; without it they are None
         dp = res["directional_properties"]
+        if importlib.util.find_spec("elastic_vis") is None:
+            self.assertIsNone(dp)
+            return
         self.assertIsNotNone(dp)
         self.assertGreater(dp["E_min"], 0)
         self.assertGreaterEqual(dp["E_max"], dp["E_min"])
@@ -265,9 +287,6 @@ class TestElasticASE(unittest.TestCase):
         # In [001] direction: theta = 0
         E_001 = el.Young(0.0, 0.0)
         self.assertAlmostEqual(E_001, 1.0 / S[2, 2], places=3)
-
-        # Check Universal Anisotropy in averages
-        self.assertIn("universal_anisotropy", res["polycrystalline_averages"])
         self.assertGreaterEqual(res["polycrystalline_averages"]["universal_anisotropy"], 0.0)
 
     def test_cli_execution(self):
@@ -321,6 +340,72 @@ class TestElasticASE(unittest.TestCase):
             res_ref["polycrystalline_averages"]["K_VRH"],
             atol=0.5
         )
+
+    def test_standard_frame_after_reorientation(self):
+        # Default reorient=True: a rotated cubic cell is standardized first, so the standard
+        # frame must equal the unrotated result (the rotation must not be applied twice).
+        a0 = 3.9943  # EMT equilibrium lattice constant of Al (stress-free reference)
+        strains = [-0.002, -0.001, 0.0, 0.001, 0.002]
+        al_ref = bulk("Al", "fcc", a=a0, cubic=True)
+        al_ref.calc = EMT()
+        C_ref = ElasticASE(al_ref, symmetry="cubic", strains=strains, verbose=False).calculate()["stiffness_matrix"]
+
+        al_rot = bulk("Al", "fcc", a=a0, cubic=True)
+        al_rot.rotate(37, [1, 2, 3], rotate_cell=True)
+        al_rot.calc = EMT()
+        el = ElasticASE(al_rot, frame="standard", strains=strains, verbose=False)
+        self.assertTrue(el.reoriented)
+        res = el.calculate()
+        np.testing.assert_allclose(res["stiffness_standard"], C_ref, atol=0.05)
+        np.testing.assert_allclose(res["stiffness_matrix"], C_ref, atol=0.05)
+        for name in ("C11", "C12", "C44"):
+            self.assertAlmostEqual(res["standard_constants"][name], C_ref[{"C11": 0, "C12": 0, "C44": 3}[name],
+                                   {"C11": 0, "C12": 1, "C44": 3}[name]], delta=0.05)
+
+    def test_reorientation_keeps_cell_and_atom_data(self):
+        # Reorientation is a rigid rotation: the user's cell (primitive or supercell), the atoms
+        # and per-atom data stay as given, so calculator settings (k-points, magmoms) remain valid.
+        from ase.constraints import FixAtoms
+        cu = bulk("Cu", "fcc", a=3.6, cubic=True).repeat((2, 1, 1))
+        cu.rotate(30, "z", rotate_cell=True)
+        cu.set_initial_magnetic_moments([0.5] * len(cu))
+        cu.set_tags(range(len(cu)))
+        cu.set_constraint(FixAtoms([0]))
+        cu.calc = EMT()
+        el = ElasticASE(cu, verbose=False)
+        self.assertTrue(el.reoriented)
+        self.assertEqual(len(el.atoms), len(cu))
+        np.testing.assert_allclose(el.atoms.cell.cellpar(), cu.cell.cellpar(), atol=1e-8)
+        np.testing.assert_allclose(el.atoms.get_initial_magnetic_moments(), 0.5)
+        np.testing.assert_array_equal(el.atoms.get_tags(), cu.get_tags())
+        self.assertEqual(len(el.atoms.constraints), 1)
+        np.testing.assert_allclose(np.abs(el.atoms.cell[0]), [7.2, 0, 0], atol=1e-8)  # cubic axes along x, y, z
+
+        prim = bulk("Cu", "fcc", a=3.6)
+        prim.calc = EMT()
+        self.assertEqual(len(ElasticASE(prim, verbose=False).atoms), 1)
+
+    def test_stability_independent_of_orientation(self):
+        from elastic_ase import check_mechanical_stability
+        from elastic_ase.auto import bond_matrix
+        C = np.zeros((6, 6))
+        C[:3, :3] = 60.0
+        np.fill_diagonal(C[:3, :3], 100.0)
+        C[3, 3] = C[4, 4] = C[5, 5] = -5.0  # unstable: C44 < 0
+        rng = np.random.default_rng(0)
+        for _ in range(50):
+            q, _r = np.linalg.qr(rng.normal(size=(3, 3)))
+            q *= np.sign(np.linalg.det(q))
+            m = bond_matrix(q)
+            self.assertFalse(check_mechanical_stability(m @ C @ m.T, "cubic")[0])
+
+    def test_needs_three_strains(self):
+        al = bulk("Al", "fcc", a=4.05, cubic=True)
+        al.calc = EMT()
+        with self.assertRaises(ValueError):
+            ElasticASE(al, strains=[0.01], verbose=False)
+        with self.assertRaises(ValueError):
+            ElasticASE(al, strains=[0.01, 0.01, -0.01], verbose=False)
 
     def test_symmetry_classification_and_report(self):
         from elastic_ase.symmetry import classify, check_symmetry, TRIGONAL_31M
