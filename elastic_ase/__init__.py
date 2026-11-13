@@ -1,4 +1,4 @@
-__version__ = "0.2.0"
+__version__ = "0.0.1"
 
 from elastic_ase.calculator import ElasticASE
 from elastic_ase.symmetry import check_symmetry, classify, SymmetryReport

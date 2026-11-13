@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elastic-ase"
-version = "0.2.0"
+version = "0.0.1"
 description = "Second-order elastic constants calculation and anisotropic visualization package for ASE"
 readme = "README.md"
 requires-python = ">=3.8"
