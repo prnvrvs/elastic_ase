@@ -291,5 +291,92 @@ class TestElasticASE(unittest.TestCase):
             if os.path.exists(json_path):
                 os.remove(json_path)
 
+    def test_orientation_aware_auto_mode_arbitrary_tilt(self):
+        # 1. Untilted FCC Al reference
+        al_ref = bulk("Al", "fcc", a=4.05, cubic=True)
+        al_ref.calc = EMT()
+        el_ref = ElasticASE(al_ref, symmetry="cubic", verbose=False)
+        res_ref = el_ref.calculate()
+        C_ref = res_ref["stiffness_matrix"]
+
+        # 2. Arbitrarily tilted FCC Al (rotated by 37 degrees around [1, 2, 3])
+        al_tilted = bulk("Al", "fcc", a=4.05, cubic=True)
+        al_tilted.rotate(37, [1, 2, 3], rotate_cell=True)
+        al_tilted.calc = EMT()
+
+        # Run with reorient=False (orientation-aware auto mode) and frame="standard"
+        el_tilted = ElasticASE(al_tilted, symmetry="auto", reorient=False, frame="standard", verbose=False)
+        self.assertTrue(el_tilted.is_auto_oriented)
+        res_tilted = el_tilted.calculate()
+
+        C_std = res_tilted["stiffness_standard"]
+        # The transformed standard stiffness should match reference C_ref within 1.5 GPa
+        np.testing.assert_allclose(C_std[0, 0], C_ref[0, 0], atol=1.5)
+        np.testing.assert_allclose(C_std[0, 1], C_ref[0, 1], atol=1.5)
+        np.testing.assert_allclose(C_std[3, 3], C_ref[3, 3], atol=1.5)
+
+        # Polycrystalline VRH moduli must be rotationally invariant
+        np.testing.assert_allclose(
+            res_tilted["polycrystalline_averages"]["K_VRH"],
+            res_ref["polycrystalline_averages"]["K_VRH"],
+            atol=0.5
+        )
+
+    def test_symmetry_classification_and_report(self):
+        from elastic_ase.symmetry import classify, check_symmetry, TRIGONAL_31M
+
+        # Test space group classification
+        sys_c, laue_c, name_c = classify(225)
+        self.assertEqual((sys_c, laue_c, name_c), ("cubic", "m-3m", "cubic"))
+
+        sys_h, laue_h, name_h = classify(194)
+        self.assertEqual((sys_h, laue_h, name_h), ("hexagonal", "6/mmm", "hexagonal"))
+
+        # Test trigonal_31m routing to trigonal_2
+        for sg in TRIGONAL_31M:
+            _, _, named = classify(sg)
+            self.assertEqual(named, "trigonal_2")
+
+        # Test SymmetryReport summary method
+        al = bulk("Al", "fcc", a=4.05, cubic=True)
+        report = check_symmetry(al, verbose=False)
+        self.assertEqual(report.crystal_system, "cubic")
+        self.assertEqual(report.laue_class, "m-3m")
+        self.assertEqual(report.recommended, "cubic")
+        self.assertTrue(report.recommended_works)
+        summary_str = report.summary()
+        self.assertIn("Fm-3m", summary_str)
+        self.assertIn("3 independent", summary_str)
+
+    def test_cli_frame_and_check(self):
+        import tempfile
+        import json
+        from elastic_ase.cli import main as cli_main
+
+        with tempfile.NamedTemporaryFile(suffix=".cif", delete=False) as f:
+            cif_path = f.name
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            json_path = f.name
+
+        try:
+            bulk("Al", "fcc", a=4.05, cubic=True).write(cif_path)
+            # Test --check mode
+            ret_check = cli_main([cif_path, "--check"])
+            self.assertEqual(ret_check, 0)
+
+            # Test --frame standard mode
+            ret_calc = cli_main([cif_path, "-c", "emt", "--frame", "standard", "-o", json_path, "-q"])
+            self.assertEqual(ret_calc, 0)
+            with open(json_path) as jf:
+                data = json.load(jf)
+            self.assertEqual(data["frame"], "standard")
+            self.assertIn("stiffness_standard", data)
+            self.assertEqual(len(data["stiffness_standard"]), 6)
+        finally:
+            if os.path.exists(cif_path):
+                os.remove(cif_path)
+            if os.path.exists(json_path):
+                os.remove(json_path)
+
 if __name__ == "__main__":
     unittest.main()

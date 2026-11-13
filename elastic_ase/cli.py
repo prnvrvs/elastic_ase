@@ -10,7 +10,9 @@ import json
 import numpy as np
 import pandas as pd
 from ase.io import read
-from elastic_ase.calculator import ElasticASE, check_symmetry
+from elastic_ase.calculator import ElasticASE
+from elastic_ase.symmetry import check_symmetry
+
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
@@ -50,6 +52,13 @@ def parse_args(args=None):
             "monoclinic", "triclinic"
         ],
         help="Crystal symmetry family."
+    )
+    parser.add_argument(
+        "--frame",
+        type=str,
+        default="cartesian",
+        choices=["cartesian", "standard"],
+        help="Coordinate frame for output stiffness tensor ('cartesian' or 'standard')."
     )
     parser.add_argument(
         "--strains",
@@ -107,6 +116,7 @@ def parse_args(args=None):
 
     return parser.parse_args(args)
 
+
 def main(args=None):
     parsed = parse_args(args)
 
@@ -114,13 +124,13 @@ def main(args=None):
         print(f"Error: Structure file '{parsed.structure}' not found.", file=sys.stderr)
         return 1
 
-    # Load structure
-    atoms = read(parsed.structure)
-
     # Fast symmetry check mode
     if parsed.check:
-        check_symmetry(atoms, verbose=True)
+        check_symmetry(parsed.structure, verbose=True)
         return 0
+
+    # Load structure
+    atoms = read(parsed.structure)
 
     # Attach calculator
     if parsed.calculator == "emt":
@@ -140,6 +150,7 @@ def main(args=None):
         symmetry=parsed.symmetry,
         strains=strain_list,
         reorient=parsed.reorient,
+        frame=parsed.frame,
         verbose=not parsed.quiet
     )
     results = el.calculate()
@@ -147,10 +158,15 @@ def main(args=None):
     # Save output if requested
     if parsed.output:
         out_path = parsed.output
+        active_matrix = results["stiffness_matrix"]
         if out_path.endswith(".json"):
             serializable = {
                 "symmetry": str(el.symmetry),
-                "stiffness_matrix": np.array(el.stiffness).tolist(),
+                "frame": str(el.frame),
+                "stiffness_matrix": np.array(active_matrix).tolist(),
+                "stiffness_cartesian": np.array(el.stiffness).tolist() if el.stiffness is not None else None,
+                "stiffness_standard": np.array(el.stiffness_standard).tolist() if el.stiffness_standard is not None else None,
+                "standard_constants": {k: float(v) for k, v in el.standard_constants.items()} if el.standard_constants else {},
                 "compliance_matrix": np.array(el.compliance).tolist(),
                 "is_stable": bool(el.is_stable),
                 "stability_criteria": str(el.stability_criteria),
@@ -165,6 +181,7 @@ def main(args=None):
         elif out_path.endswith(".csv"):
             data = {
                 "Symmetry": [el.symmetry],
+                "Frame": [el.frame],
                 "Stable": [el.is_stable],
                 "K_VRH_GPa": [el.averages["K_VRH"]],
                 "G_VRH_GPa": [el.averages["G_VRH"]],
@@ -185,7 +202,7 @@ def main(args=None):
                 data["Auxetic"] = [el.directional["is_auxetic"]]
             for i in range(6):
                 for j in range(6):
-                    data[f"C{i+1}{j+1}_GPa"] = [round(float(el.stiffness[i, j]), 2)]
+                    data[f"C{i+1}{j+1}_GPa"] = [round(float(active_matrix[i, j]), 2)]
             pd.DataFrame(data).to_csv(out_path, index=False)
             if not parsed.quiet:
                 print(f"\n[ElasticASE] Saved results to {out_path}")
@@ -218,6 +235,7 @@ def main(args=None):
         )
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -4,102 +4,42 @@ import numpy as np
 import pandas as pd
 
 from ase import Atoms
+from elastic_ase._spglib import call as spg_call
+from elastic_ase.symmetry import check_symmetry, classify, SymmetryReport
+from elastic_ase.systems import SYSTEMS, CrystalSystem
+from elastic_ase import auto
+from elastic_ase import orientation
 from elastic_ase.deformations import get_deformation_specs, build_strain_matrix
 from elastic_ase.solvers import solve_stiffness, check_mechanical_stability
 from elastic_ase.average import calculate_polycrystalline_averages
 
 EV_TO_GPA = 160.21766208
 
-def check_symmetry(atoms: Atoms, symprec: float = 1e-3, verbose: bool = True):
+
+def auto_detect_symmetry(atoms: Atoms, symprec: float = 1e-3) -> str:
     """
-    Analyzes crystal symmetry of the structure using spglib.
-    Returns a dict with space group info, Laue class, independent constants, and recommended workflow.
+    Auto-detect crystal symmetry family using spglib.
+    Returns named workflow string ('cubic', 'hexagonal', 'trigonal_2', etc.).
     """
     try:
-        import spglib
-        cell_data = (atoms.get_cell(), atoms.get_scaled_positions(), atoms.get_atomic_numbers())
-        dataset = spglib.get_symmetry_dataset(cell_data, symprec=symprec)
+        cell_data = (np.asarray(atoms.get_cell(), float), atoms.get_scaled_positions(), atoms.numbers)
+        dataset = spg_call("get_symmetry_dataset", cell_data, symprec=symprec)
         if dataset is None:
-            return {"space_group": "Unknown", "number": 0, "recommended": "cubic"}
+            return "cubic"
 
-        spg = dataset.number
-        if 195 <= spg <= 230:
-            system, laue, recommended = "cubic", "m-3m", "cubic"
-            constants = ("C11", "C12", "C44")
-        elif 168 <= spg <= 194:
-            system, laue, recommended = "hexagonal", "6/mmm", "hexagonal"
-            constants = ("C11", "C12", "C13", "C33", "C44")
-        elif 143 <= spg <= 167:
-            system = "trigonal II" if spg <= 148 else "trigonal I"
-            laue = "-3" if spg <= 148 else "-3m"
-            recommended = "trigonal_2"
-            constants = ("C11", "C12", "C13", "C33", "C44", "C14", "C15")
-        elif 89 <= spg <= 142:
-            system, laue, recommended = "tetragonal I", "4/mmm", "tetragonal_1"
-            constants = ("C11", "C12", "C13", "C33", "C44", "C66")
-        elif 75 <= spg <= 88:
-            system, laue, recommended = "tetragonal II", "4/m", "tetragonal_2"
-            constants = ("C11", "C12", "C13", "C33", "C44", "C66", "C16")
-        elif 16 <= spg <= 74:
-            system, laue, recommended = "orthorhombic", "mmm", "orthogonal"
-            constants = ("C11", "C22", "C33", "C12", "C13", "C23", "C44", "C55", "C66")
-        elif 3 <= spg <= 15:
-            system, laue, recommended = "monoclinic", "2/m", "monoclinic"
-            constants = ("C11", "C22", "C33", "C12", "C13", "C23", "C44", "C55", "C66", "C15", "C25", "C35", "C46")
-        else:
-            system, laue, recommended = "triclinic", "-1", "triclinic"
-            constants = tuple(f"C{i}{j}" for i in range(1, 7) for j in range(i, 7))
-
-        report = {
-            "formula": atoms.get_chemical_formula(),
-            "natoms": len(atoms),
-            "space_group": dataset.international,
-            "number": spg,
-            "crystal_system": system,
-            "laue_class": laue,
-            "constants": constants,
-            "n_constants": len(constants),
-            "recommended": recommended,
-        }
-
-        if verbose:
-            print("=" * 70)
-            print(f" ElasticASE Symmetry Check: {report['formula']} ({report['natoms']} atoms)")
-            print("=" * 70)
-            print(f" Space group       : {report['space_group']} (#{spg}) – {system} (Laue: {laue})")
-            print(f" Elastic constants : {len(constants)} independent ({', '.join(constants)})")
-            print(f" Recommended mode  : {recommended}")
-            print("=" * 70)
-
-        return report
-    except Exception as e:
-        if verbose:
-            print(f"[ElasticASE] Symmetry check failed: {e}")
-        return {"space_group": "Unknown", "number": 0, "recommended": "cubic"}
-
-def auto_detect_symmetry(atoms):
-    """
-    Auto-detect crystal symmetry family using spglib if available.
-    """
-    try:
-        import spglib
-        dataset = spglib.get_symmetry_dataset(
-            (atoms.get_cell(), atoms.get_scaled_positions(), atoms.get_atomic_numbers())
-        )
-        spg = dataset.number
+        spg = dataset.number if hasattr(dataset, "number") else dataset["number"]
         if 195 <= spg <= 230:
             return "cubic"
         elif 168 <= spg <= 194:
             return "hexagonal"
         elif 143 <= spg <= 167:
-            # Route all trigonal groups to trigonal_2 because it simultaneously fits C14 and C15.
-            # This avoids silent errors in '31m'-type groups (P-31m, P-31c, P31m, etc.)
-            # and works for any arbitrary in-plane rotation about z.
+            # Route all trigonal groups to trigonal_2 because it simultaneously fits C14 and C15,
+            # avoiding silent errors in '31m'-type groups and for arbitrary in-plane rotation about z.
             return "trigonal_2"
         elif 89 <= spg <= 142:
-            return "tetragonal_1"  # 4/mmm (6 independent constants)
+            return "tetragonal_1"
         elif 75 <= spg <= 88:
-            return "tetragonal_2"  # 4/m (7 independent constants including C16)
+            return "tetragonal_2"
         elif 16 <= spg <= 74:
             return "orthogonal"
         elif 3 <= spg <= 15:
@@ -109,7 +49,8 @@ def auto_detect_symmetry(atoms):
     except Exception:
         return "cubic"
 
-def validate_orientation(atoms, symmetry, verbose=True):
+
+def validate_orientation(atoms: Atoms, symmetry: str, verbose: bool = True):
     """
     Checks for common crystallographic orientation pitfalls:
     1. Trigonal/Hexagonal: c-axis must be along z (cell[2] || z).
@@ -163,29 +104,28 @@ def validate_orientation(atoms, symmetry, verbose=True):
 
     return warnings
 
+
 def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool = True):
     """
-    Analyzes cell orientation and automatically standardizes/reorients the structure
-    using spglib if a non-standard crystallographic orientation is detected:
+    Standardizes/reorients the structure to conventional crystallographic setting using spglib:
     - Rhombohedral cells (3-fold along [111]) -> conventional hexagonal setting (c || z).
-    - Tilted hexagonal/trigonal cells (c tilted or along x/y) -> standard setting (c || z, a || x).
+    - Tilted hexagonal/trigonal cells -> standard setting (c || z, a || x).
     - Monoclinic cells with unique axis c or a -> standard setting (unique axis b || y).
     - Rotated cubic/orthorhombic cells -> standard Cartesian alignment.
     """
     try:
-        import spglib
-        cell_data = (atoms.get_cell(), atoms.get_scaled_positions(), atoms.get_atomic_numbers())
-        dataset = spglib.get_symmetry_dataset(cell_data, symprec=symprec)
+        cell_data = (np.asarray(atoms.get_cell(), float), atoms.get_scaled_positions(), atoms.numbers)
+        dataset = spg_call("get_symmetry_dataset", cell_data, symprec=symprec)
         if dataset is None:
             return atoms, False
 
-        spg = dataset.number
-        std_cell_data = spglib.standardize_cell(cell_data, to_primitive=False, symprec=symprec)
+        spg = dataset.number if hasattr(dataset, "number") else dataset["number"]
+        international = dataset.international if hasattr(dataset, "international") else dataset["international"]
+        std_cell_data = spg_call("standardize_cell", cell_data, to_primitive=False, symprec=symprec)
         if std_cell_data is None:
             return atoms, False
 
         std_cell = std_cell_data[0]
-        # Check if cell changed substantially in orientation or basis
         if not np.allclose(atoms.get_cell(), std_cell, atol=1e-3):
             new_atoms = Atoms(
                 numbers=std_cell_data[2],
@@ -195,7 +135,7 @@ def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool 
             )
             new_atoms.calc = atoms.calc
             if verbose:
-                print(f"[ElasticASE] Reorientation: Standardized cell to conventional setting (Space group: {dataset.international} #{spg})")
+                print(f"[ElasticASE] Reorientation: Standardized cell to conventional setting (Space group: {international} #{spg})")
             return new_atoms, True
 
         return atoms, False
@@ -203,6 +143,7 @@ def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool 
         if verbose:
             print(f"[ElasticASE] Notice: auto-standardization skipped ({e})")
         return atoms, False
+
 
 class ElasticASE:
     """
@@ -218,6 +159,7 @@ class ElasticASE:
         fmax: float = 1e-3,
         reorient: bool = True,
         symprec: float = 1e-3,
+        frame: str = "cartesian",
         verbose: bool = True
     ):
         if atoms.calc is None:
@@ -227,38 +169,90 @@ class ElasticASE:
         self.optimizer = optimizer
         self.fmax = fmax
         self.symprec = symprec
-        self.reoriented = False
+        self.frame = frame.lower().strip()
+        if self.frame in ("input", "raw"):
+            self.frame = "cartesian"
+        if self.frame not in ("cartesian", "standard"):
+            raise ValueError(f"frame must be 'cartesian' or 'standard', got {frame!r}")
 
+        self.reoriented = False
         self.atoms = atoms.copy()
         self.atoms.calc = atoms.calc
 
-        # Automatically decide and reorient structure if requested
+        # Space group detection from original cell
+        cell_data = (np.asarray(self.atoms.get_cell(), float), self.atoms.get_scaled_positions(), self.atoms.numbers)
+        dataset = spg_call("get_symmetry_dataset", cell_data, symprec=self.symprec)
+        if dataset is not None:
+            self.space_group_number = int(dataset.number if hasattr(dataset, "number") else dataset["number"])
+            self.space_group_symbol = str(dataset.international if hasattr(dataset, "international") else dataset["international"])
+        else:
+            self.space_group_number = 0
+            self.space_group_symbol = "Unknown"
+
+        # Rotation to standard setting
+        try:
+            self.standard_rotation, _ = auto.standard_setting(self.atoms, symprec=self.symprec)
+        except Exception:
+            self.standard_rotation = None
+
+        # Reorient / standardize if requested
         if reorient:
             self.atoms, self.reoriented = standardize_and_reorient(
                 self.atoms, symprec=self.symprec, verbose=self.verbose
             )
 
-        if symmetry == "auto":
-            self.symmetry = auto_detect_symmetry(self.atoms)
-            if self.verbose:
-                print(f"[ElasticASE] Auto-detected crystal symmetry: '{self.symmetry}'")
+        # Symmetry specification & CrystalSystem resolution
+        sym_req = symmetry.lower().strip()
+        if sym_req == "auto":
+            named_sys = auto_detect_symmetry(self.atoms, symprec=self.symprec)
+            self.symmetry = named_sys
+            if not reorient:
+                # Orientation-aware automatic mode: derive invariant basis & deformations in current frame
+                self.crystal_system, self.basis = auto.from_structure(self.atoms, symprec=self.symprec)
+                self.is_auto_oriented = True
+                if self.verbose:
+                    print(
+                        f"[ElasticASE] Orientation-aware automatic mode: derived {len(self.basis)} independent "
+                        f"constants in current Cartesian frame."
+                    )
+            else:
+                self.crystal_system = SYSTEMS[named_sys]
+                self.is_auto_oriented = False
+                if self.verbose:
+                    print(f"[ElasticASE] Auto-detected crystal symmetry: '{self.symmetry}'")
         else:
-            self.symmetry = symmetry.lower().strip()
+            if sym_req in SYSTEMS:
+                self.symmetry = sym_req
+                self.crystal_system = SYSTEMS[sym_req]
+                self.is_auto_oriented = False
+            elif sym_req == "orthorhombic":
+                self.symmetry = "orthogonal"
+                self.crystal_system = SYSTEMS["orthogonal"]
+                self.is_auto_oriented = False
+            else:
+                raise ValueError(f"Unknown symmetry: '{symmetry}'. Supported: {list(SYSTEMS.keys())} or 'auto'")
 
         # Validate crystallographic orientation against common pitfalls
         self.orientation_warnings = validate_orientation(self.atoms, self.symmetry, verbose=self.verbose)
 
+        # Strain values
         if strains is None:
             self.strains = np.array([-0.01, -0.005, 0.0, 0.005, 0.01])
         else:
             self.strains = np.array(sorted(strains))
 
-        self.specs = get_deformation_specs(self.symmetry)
+        # Backward compatibility for code expecting specs list
+        self.specs = [(d.folder, d.at) for d in self.crystal_system.deformations]
+
         self.V0 = self.atoms.get_volume()
         self.E0 = None
         self.coeffs = {}
         self.r2_scores = {}
         self.stiffness = None
+        self.stiffness_standard = None
+        self.constants = {}
+        self.standard_constants = {}
+        self.standard_residual = 0.0
         self.averages = None
         self.directional = None
         self.is_stable = False
@@ -274,17 +268,18 @@ class ElasticASE:
             print("=" * 70)
             print(f"Initial Cell Volume V0 : {self.V0:.4f} Å³ ({self.V0 / len(self.atoms):.4f} Å³/atom)")
             print(f"Strain values          : {self.strains.tolist()}")
-            print(f"Deformation modes      : {len(self.specs)}")
+            print(f"Deformation modes      : {len(self.crystal_system.deformations)}")
             print("-" * 70)
 
         # Baseline energy at zero strain
         self.E0 = self.atoms.get_potential_energy()
 
         # Iterate over all deformation modes
-        for mode_name, def_func in self.specs:
+        for deformation in self.crystal_system.deformations:
+            mode_name = deformation.folder
             energies = []
             for s in self.strains:
-                d1, d2, d3, d4, d5, d6 = def_func(float(s))
+                d1, d2, d3, d4, d5, d6 = deformation.at(float(s))
                 strain_mat = build_strain_matrix(d1, d2, d3, d4, d5, d6)
 
                 # Deform cell
@@ -310,7 +305,7 @@ class ElasticASE:
             a = poly_coeffs[0]
             b = poly_coeffs[1]
 
-            # In elastic_vasp convention: coeff = a * 160.21766208
+            # In elastic_vasp convention: coeff = a * 160.21766208 (GPa)
             coeff_val = float(a * EV_TO_GPA)
             self.coeffs[mode_name] = coeff_val
 
@@ -330,17 +325,43 @@ class ElasticASE:
             if self.verbose:
                 print(f"  Mode {mode_name:<18} -> Coeff = {coeff_val:10.2f} GPa  (R² = {r2:.6f})")
 
-        # Assemble 6x6 stiffness matrix
-        self.stiffness = solve_stiffness(self.symmetry, self.coeffs)
+        # Solve independent constants and 6x6 stiffness matrix via design-matrix solver
+        self.constants, self.stiffness = self.crystal_system.solve(self.coeffs)
+
+        # Standard crystallographic setting calculation
+        if self.standard_rotation is not None:
+            self.stiffness_standard = auto.to_standard(self.stiffness, self.standard_rotation)
+            if self.space_group_number > 0:
+                try:
+                    _, self.standard_constants, self.standard_residual = auto.standard_constants(
+                        self.stiffness_standard, self.space_group_number
+                    )
+                except Exception:
+                    self.standard_constants = dict(self.constants)
+                    self.standard_residual = 0.0
+        else:
+            self.stiffness_standard = self.stiffness.copy()
+            self.standard_constants = dict(self.constants)
+            self.standard_residual = 0.0
+
+        # Mechanical stability check & polycrystalline averages
         self.is_stable, self.stability_criteria = check_mechanical_stability(self.stiffness, self.symmetry)
         self.averages = calculate_polycrystalline_averages(self.stiffness)
         self.directional = self.directional_analysis()
+
+        # Primary stiffness matrix respecting frame preference
+        output_stiffness = self.stiffness_standard if self.frame == "standard" else self.stiffness
 
         if self.verbose:
             self._print_report()
 
         return {
-            "stiffness_matrix": self.stiffness,
+            "stiffness_matrix": output_stiffness,
+            "stiffness_cartesian": self.stiffness,
+            "stiffness_standard": self.stiffness_standard,
+            "standard_constants": self.standard_constants,
+            "standard_rotation": self.standard_rotation,
+            "independent_constants": self.constants,
             "is_stable": self.is_stable,
             "stability_criteria": self.stability_criteria,
             "polycrystalline_averages": self.averages,
@@ -351,14 +372,31 @@ class ElasticASE:
 
     def _print_report(self):
         print("\n" + "=" * 70)
-        print(" 6x6 Stiffness Matrix C_ij (GPa):")
+        frame_label = "Standard Setting" if self.frame == "standard" else "Cartesian Frame"
+        print(f" 6x6 Stiffness Matrix C_ij (GPa) [{frame_label}]:")
         print("=" * 70)
+        display_matrix = self.stiffness_standard if self.frame == "standard" else self.stiffness
         df_C = pd.DataFrame(
-            np.round(self.stiffness, 2),
+            np.round(display_matrix, 2),
             index=[f"C{i}" for i in range(1, 7)],
             columns=[f"C{j}" for j in range(1, 7)]
         )
         print(df_C.to_string())
+
+        # If in Cartesian frame and standard frame is different, print standard setting as well
+        if self.frame != "standard" and self.stiffness_standard is not None and not np.allclose(self.stiffness, self.stiffness_standard, atol=1e-2):
+            print("\n" + "-" * 70)
+            print(" Standard Crystallographic Setting (C_std):")
+            print(f"  Space group : {self.space_group_symbol} (#{self.space_group_number})")
+            if self.standard_constants:
+                consts_str = ", ".join(f"{k} = {v:.2f}" for k, v in self.standard_constants.items())
+                print(f"  Constants   : {consts_str}")
+            df_std = pd.DataFrame(
+                np.round(self.stiffness_standard, 2),
+                index=[f"C{i}" for i in range(1, 7)],
+                columns=[f"C{j}" for j in range(1, 7)]
+            )
+            print(df_std.to_string())
 
         print("\n" + "-" * 70)
         print(" Born Mechanical Stability:")
@@ -393,9 +431,10 @@ class ElasticASE:
     @property
     def compliance(self):
         """6x6 Voigt compliance matrix S = C^-1 in 1/GPa."""
-        if self.stiffness is None:
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        if target is None:
             raise RuntimeError("Must call calculate() before accessing compliance matrix.")
-        return np.linalg.inv(self.stiffness)
+        return np.linalg.inv(target)
 
     def directional_analysis(self):
         """
@@ -405,7 +444,8 @@ class ElasticASE:
         - Poisson's ratio nu: min, max, auxetic check
         - Linear compressibility LC: min, max, negative LC check
         """
-        if self.stiffness is None:
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        if target is None:
             raise RuntimeError("Must call calculate() before performing directional analysis.")
 
         try:
@@ -463,12 +503,13 @@ class ElasticASE:
 
     def to_elastic_vis(self):
         """
-        Converts the calculated 6x6 stiffness matrix to an elastic_vis.Elastic object.
+        Converts the active 6x6 stiffness matrix to an elastic_vis.Elastic object.
         """
-        if self.stiffness is None:
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        if target is None:
             raise RuntimeError("Must call calculate() before converting to elastic_vis.")
         from elastic_vis import Elastic
-        return Elastic(self.stiffness)
+        return Elastic(target)
 
     def visualize(
         self,
@@ -488,7 +529,8 @@ class ElasticASE:
         - show: whether to display plots interactively
         - output_format: 'png', 'pdf', or 'svg'
         """
-        if self.stiffness is None:
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        if target is None:
             raise RuntimeError("Must call calculate() before visualising results.")
 
         import json
@@ -508,7 +550,7 @@ class ElasticASE:
             with open(style_config, "r") as f:
                 style_config = json.load(f)
 
-        material = Elastic(self.stiffness)
+        material = Elastic(target)
 
         if isinstance(properties, str):
             if properties.lower() == "all":
@@ -592,9 +634,10 @@ class ElasticASE:
         Exports the 6x6 stiffness matrix as a plain space-separated text file,
         compatible with elastic-vis and numpy.loadtxt.
         """
-        if self.stiffness is None:
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        if target is None:
             raise RuntimeError("Must call calculate() before exporting matrix.")
-        np.savetxt(filepath, self.stiffness, fmt="%.6f")
+        np.savetxt(filepath, target, fmt="%.6f")
         if self.verbose:
             print(f"[ElasticASE] Exported 6x6 stiffness matrix to {filepath}")
 
@@ -605,6 +648,7 @@ class ElasticASE:
     def __str__(self):
         if self.stiffness is None:
             return f"ElasticASE(symmetry='{self.symmetry}', status='uncalculated')"
-        c11 = self.stiffness[0, 0]
+        target = self.stiffness_standard if self.frame == "standard" else self.stiffness
+        c11 = target[0, 0]
         stable = "Stable" if self.is_stable else "Unstable"
         return f"ElasticASE(symmetry='{self.symmetry}', C11={c11:.2f} GPa, {stable})"
