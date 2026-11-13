@@ -1,3 +1,5 @@
+__version__ = "0.2.0"
+
 from elastic_ase.calculator import ElasticASE
 from elastic_ase.symmetry import check_symmetry, classify, SymmetryReport
 from elastic_ase.deformations import get_deformation_specs
