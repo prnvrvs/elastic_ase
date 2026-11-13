@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elastic-ase"
-version = "0.1.0"
-description = "Second-order elastic constants calculation package for ASE (Atomic Simulation Environment)"
+version = "0.2.0"
+description = "Second-order elastic constants calculation and anisotropic visualization package for ASE"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [
@@ -15,7 +15,8 @@ dependencies = [
     "numpy",
     "pandas",
     "ase",
-    "spglib"
+    "spglib",
+    "elastic-vis"
 ]
 
 [project.scripts]

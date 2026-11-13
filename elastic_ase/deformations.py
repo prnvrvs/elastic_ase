@@ -26,7 +26,7 @@ def get_deformation_specs(symmetry):
             ("C44", lambda s: (0.0, 0.0, 0.0, s, s, 0.0)),
             ("C11_C12_C13_C33", lambda s: (s, s, s, 0.0, 0.0, 0.0)),
         ]
-    elif sym in ["orthogonal", "orthorhombic", "tetragonal"]:
+    elif sym in ["orthogonal", "orthorhombic"]:
         return [
             ("C11_C22_C12_I", lambda s: (s, -s, square_ratio(s, 1.0 - s**2), 0.0, 0.0, 0.0)),
             ("C11_C22_C12_II", lambda s: (s, s, 0.0, 0.0, 0.0, 0.0)),
@@ -37,6 +37,25 @@ def get_deformation_specs(symmetry):
             ("C44", lambda s: (square_ratio(s, 4.0 - s**2), 0.0, 0.0, s, 0.0, 0.0)),
             ("C55", lambda s: (0.0, square_ratio(s, 4.0 - s**2), 0.0, 0.0, s, 0.0)),
             ("C66", lambda s: (0.0, 0.0, square_ratio(s, 4.0 - s**2), 0.0, 0.0, s)),
+        ]
+    elif sym in ["tetragonal_1", "tetragonal1", "tetragonal"]:
+        return [
+            ("C11_C12_I", lambda s: (s, s, 0.0, 0.0, 0.0, 0.0)),
+            ("C11_C12_II", lambda s: (s, -s, square_ratio(s, 1.0 - s**2), 0.0, 0.0, 0.0)),
+            ("C11_C33_C13_I", lambda s: (s, square_ratio(s, 1.0 - s**2), -s, 0.0, 0.0, 0.0)),
+            ("C11_C12_C13_C33", lambda s: (s, s, s, 0.0, 0.0, 0.0)),
+            ("C44", lambda s: (0.0, 0.0, 0.0, s, s, 0.0)),
+            ("C66", lambda s: (0.0, 0.0, square_ratio(s, 4.0 - s**2), 0.0, 0.0, s)),
+        ]
+    elif sym in ["tetragonal_2", "tetragonal2"]:
+        return [
+            ("C11_C12_I", lambda s: (s, s, 0.0, 0.0, 0.0, 0.0)),
+            ("C11_C12_II", lambda s: (s, -s, square_ratio(s, 1.0 - s**2), 0.0, 0.0, 0.0)),
+            ("C11_C33_C13_I", lambda s: (s, square_ratio(s, 1.0 - s**2), -s, 0.0, 0.0, 0.0)),
+            ("C11_C12_C13_C33", lambda s: (s, s, s, 0.0, 0.0, 0.0)),
+            ("C44", lambda s: (0.0, 0.0, 0.0, s, s, 0.0)),
+            ("C66", lambda s: (0.0, 0.0, square_ratio(s, 4.0 - s**2), 0.0, 0.0, s)),
+            ("C11_C66_C16", lambda s: (s, 0.0, 0.0, 0.0, 0.0, s)),
         ]
     elif sym in ["trigonal_1", "trigonal1"]:
         return [

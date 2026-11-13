@@ -80,7 +80,7 @@ def solve_stiffness(symmetry, coeffs):
         ])
         return C
 
-    elif sym in ["orthogonal", "orthorhombic", "tetragonal"]:
+    elif sym in ["orthogonal", "orthorhombic"]:
         A = coeffs["C11_C22_C12_I"]
         B = coeffs["C11_C22_C12_II"]
         C_c = coeffs["C22_C33_C23_I"]
@@ -115,6 +115,58 @@ def solve_stiffness(symmetry, coeffs):
             [0.0, 0.0, 0.0, C44, 0.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, C55, 0.0],
             [0.0, 0.0, 0.0, 0.0, 0.0, C66]
+        ])
+        return C
+
+    elif sym in ["tetragonal_1", "tetragonal1", "tetragonal"]:
+        A = coeffs["C11_C12_I"]
+        B = coeffs["C11_C12_II"]
+        C_c = coeffs["C11_C33_C13_I"]
+        D = coeffs["C11_C12_C13_C33"]
+        E = coeffs["C44"]
+        F = coeffs["C66"]
+
+        C11 = (A + B) / 2.0
+        C12 = (A - B) / 2.0
+        C33 = (2.0 / 3.0) * (D - A - C11 + 2.0 * C_c)
+        C13 = 0.5 * (C11 + C33 - 2.0 * C_c)
+        C44 = E
+        C66 = 2.0 * F
+
+        C = np.array([
+            [C11, C12, C13, 0.0, 0.0, 0.0],
+            [C12, C11, C13, 0.0, 0.0, 0.0],
+            [C13, C13, C33, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, C44, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, C44, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, C66]
+        ])
+        return C
+
+    elif sym in ["tetragonal_2", "tetragonal2"]:
+        A = coeffs["C11_C12_I"]
+        B = coeffs["C11_C12_II"]
+        C_c = coeffs["C11_C33_C13_I"]
+        D = coeffs["C11_C12_C13_C33"]
+        E = coeffs["C44"]
+        F = coeffs["C66"]
+        G = coeffs["C11_C66_C16"]
+
+        C11 = (A + B) / 2.0
+        C12 = (A - B) / 2.0
+        C33 = (2.0 / 3.0) * (D - A - C11 + 2.0 * C_c)
+        C13 = 0.5 * (C11 + C33 - 2.0 * C_c)
+        C44 = E
+        C66 = 2.0 * F
+        C16 = G - 0.5 * C11 - F
+
+        C = np.array([
+            [C11, C12, C13, 0.0, 0.0, C16],
+            [C12, C11, C13, 0.0, 0.0, -C16],
+            [C13, C13, C33, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, C44, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, C44, 0.0],
+            [C16, -C16, 0.0, 0.0, 0.0, C66]
         ])
         return C
 

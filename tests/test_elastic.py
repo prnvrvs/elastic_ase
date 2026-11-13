@@ -175,6 +175,70 @@ class TestElasticASE(unittest.TestCase):
             if os.path.exists(poscar_path):
                 os.remove(poscar_path)
 
+    def test_check_symmetry(self):
+        from elastic_ase import check_symmetry
+        al = bulk("Al", "fcc", a=4.05, cubic=True)
+        report = check_symmetry(al, verbose=False)
+        self.assertEqual(report["crystal_system"], "cubic")
+        self.assertEqual(report["recommended"], "cubic")
+        self.assertEqual(report["n_constants"], 3)
+
+    def test_tetragonal_solvers(self):
+        from elastic_ase.solvers import solve_stiffness
+        # Tetragonal 1: 6 constants
+        coeffs_t1 = {
+            "C11_C12_I": 120.0, "C11_C12_II": 80.0,  # C11 = 100, C12 = 20
+            "C11_C33_C13_I": 90.0,
+            "C11_C12_C13_C33": 250.0,
+            "C44": 35.0,
+            "C66": 25.0
+        }
+        C1 = solve_stiffness("tetragonal_1", coeffs_t1)
+        self.assertEqual(C1.shape, (6, 6))
+        self.assertAlmostEqual(C1[0, 0], 100.0)  # C11
+        self.assertAlmostEqual(C1[0, 1], 20.0)   # C12
+        self.assertAlmostEqual(C1[3, 3], 35.0)   # C44
+        self.assertAlmostEqual(C1[5, 5], 50.0)   # C66 = 2 * 25
+
+        # Tetragonal 2: adds C16
+        coeffs_t2 = dict(coeffs_t1)
+        # G = 0.5*C11 + 0.5*C66 + C16 = 50 + 25 + 15 = 90
+        coeffs_t2["C11_C66_C16"] = 90.0
+        C2 = solve_stiffness("tetragonal_2", coeffs_t2)
+        self.assertAlmostEqual(C2[0, 5], 15.0)   # C16
+        self.assertAlmostEqual(C2[1, 5], -15.0)  # C26 = -C16
+        self.assertAlmostEqual(C2[5, 0], 15.0)
+        self.assertAlmostEqual(C2[5, 1], -15.0)
+
+    def test_elastic_vis_visualization(self):
+        import tempfile
+        al = bulk("Al", "fcc", a=4.05, cubic=True)
+        al.calc = EMT()
+
+        el = ElasticASE(al, symmetry="cubic", verbose=False)
+        el.calculate()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            prefix = os.path.join(tmpdir, "test_al")
+            # Generate 2D and 3D plots for Young's modulus
+            plots = el.visualize(
+                properties=["Young"],
+                dimensions=["2D", "3D"],
+                prefix=prefix,
+                output_format="png"
+            )
+            self.assertEqual(len(plots), 2)
+            for p in plots:
+                self.assertTrue(os.path.exists(p))
+                self.assertGreater(os.path.getsize(p), 0)
+
+            # Test export_matrix
+            txt_path = os.path.join(tmpdir, "C.txt")
+            el.export_matrix(txt_path)
+            self.assertTrue(os.path.exists(txt_path))
+            loaded = np.loadtxt(txt_path)
+            np.testing.assert_allclose(loaded, el.stiffness)
+
     def test_cli_execution(self):
         import tempfile
         from elastic_ase.cli import main as cli_main

@@ -10,18 +10,22 @@ import json
 import numpy as np
 import pandas as pd
 from ase.io import read
-from elastic_ase.calculator import ElasticASE
+from elastic_ase.calculator import ElasticASE, check_symmetry
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
         prog="elastic-ase",
-        description="Compute second-order elastic constants (C_ij) from structure files with ASE.",
+        description="Compute second-order elastic constants (C_ij) and visualize anisotropic properties with ASE.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
         "structure",
         type=str,
         help="Path to atomic structure file (CIF, POSCAR, XYZ, etc. readable by ASE)."
+    )
+    parser.add_argument(
+        "--check", action="store_true",
+        help="Perform a crystal symmetry and orientation check without calculating elastic constants."
     )
     parser.add_argument(
         "-c", "--calculator",
@@ -40,7 +44,11 @@ def parse_args(args=None):
         "-s", "--symmetry",
         type=str,
         default="auto",
-        choices=["auto", "cubic", "hexagonal", "orthogonal", "trigonal_1", "trigonal_2", "monoclinic", "triclinic"],
+        choices=[
+            "auto", "cubic", "hexagonal", "orthogonal", "orthorhombic",
+            "tetragonal_1", "tetragonal_2", "trigonal_1", "trigonal_2",
+            "monoclinic", "triclinic"
+        ],
         help="Crystal symmetry family."
     )
     parser.add_argument(
@@ -53,7 +61,7 @@ def parse_args(args=None):
         "-o", "--output",
         type=str,
         default=None,
-        help="Optional output file path to save results (JSON or CSV format based on extension)."
+        help="Output file path to save results (.json, .csv, or .txt for plain 6x6 matrix)."
     )
     parser.add_argument(
         "--no-reorient",
@@ -67,6 +75,36 @@ def parse_args(args=None):
         action="store_true",
         help="Suppress detailed terminal output."
     )
+
+    # Visualization flags powered by elastic-vis
+    vis_group = parser.add_argument_group("Visualization options (elastic-vis)")
+    vis_group.add_argument(
+        "--plot", action="store_true",
+        help="Generate directional elastic property plots via elastic-vis."
+    )
+    vis_group.add_argument("--Young", action="store_true", help="Generate Young's modulus plots.")
+    vis_group.add_argument("--Shear", action="store_true", help="Generate Shear modulus plots.")
+    vis_group.add_argument("--Poisson", action="store_true", help="Generate Poisson's ratio plots.")
+    vis_group.add_argument("--LC", action="store_true", help="Generate Linear Compressibility plots.")
+    vis_group.add_argument("--2D", dest="plot_2d", action="store_true", help="Generate 2D polar plots.")
+    vis_group.add_argument("--3D", dest="plot_3d", action="store_true", help="Generate 3D surface plots.")
+    vis_group.add_argument(
+        "--format", type=str, default="png", choices=["png", "pdf", "svg"],
+        help="Image format for saved figures."
+    )
+    vis_group.add_argument(
+        "--output-prefix", type=str, default=None,
+        help="Prefix for generated visualization files (defaults to structure file stem)."
+    )
+    vis_group.add_argument(
+        "--style", type=str, default=None,
+        help="Path to custom JSON styling file for elastic-vis."
+    )
+    vis_group.add_argument(
+        "--show", action="store_true",
+        help="Show plots interactively on screen."
+    )
+
     return parser.parse_args(args)
 
 def main(args=None):
@@ -78,6 +116,11 @@ def main(args=None):
 
     # Load structure
     atoms = read(parsed.structure)
+
+    # Fast symmetry check mode
+    if parsed.check:
+        check_symmetry(atoms, verbose=True)
+        return 0
 
     # Attach calculator
     if parsed.calculator == "emt":
@@ -133,6 +176,33 @@ def main(args=None):
             pd.DataFrame(data).to_csv(out_path, index=False)
             if not parsed.quiet:
                 print(f"\n[ElasticASE] Saved results to {out_path}")
+        else:
+            # Default to plain 6x6 text matrix (readable by elastic-vis & numpy.loadtxt)
+            el.export_matrix(out_path)
+
+    # Visualizations via elastic-vis
+    if parsed.plot:
+        props = []
+        if parsed.Young: props.append("Young")
+        if parsed.Shear: props.append("Shear")
+        if parsed.Poisson: props.append("Poisson")
+        if parsed.LC: props.append("LC")
+        if not props: props = ["Young", "Shear"]
+
+        dims = []
+        if parsed.plot_2d: dims.append("2D")
+        if parsed.plot_3d: dims.append("3D")
+        if not dims: dims = ["2D", "3D"]
+
+        prefix = parsed.output_prefix or os.path.splitext(os.path.basename(parsed.structure))[0]
+        el.visualize(
+            properties=props,
+            dimensions=dims,
+            prefix=prefix,
+            style_config=parsed.style,
+            show=parsed.show,
+            output_format=parsed.format
+        )
 
     return 0
 

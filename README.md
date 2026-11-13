@@ -12,13 +12,18 @@ It is the direct ASE-native counterpart and modern successor to `elastic_vasp`, 
 - **Zero VASP Dependency:** Runs entirely in Python/RAM without dumping dozens of temporary directories or POSCAR/INCAR files to disk.
 - **CLI Included:** Run directly from your command line: `elastic-ase POSCAR -c grace -m GRACE-2L-OAM`.
 - **Automatic Symmetry Detection:** Automatically determines space group and crystal symmetry using `spglib`.
-- **Supports All 7 Crystal Systems:**
+- **Supports All 7 Crystal Systems & Precise Sub-Classes:**
   - `cubic` (3 constants: $C_{11}, C_{12}, C_{44}$)
   - `hexagonal` (5 constants: $C_{11}, C_{12}, C_{13}, C_{33}, C_{44}$)
-  - `orthogonal` (orthorhombic / tetragonal, up to 9 constants)
-  - `trigonal_1` & `trigonal_2` (6 / 7 constants)
+  - `tetragonal_1` (Laue $4/mmm$, 6 constants: $C_{11}, C_{12}, C_{13}, C_{33}, C_{44}, C_{66}$)
+  - `tetragonal_2` (Laue $4/m$, 7 constants: including $C_{16}$)
+  - `orthogonal` / `orthorhombic` (9 constants)
+  - `trigonal_1` & `trigonal_2` (6 / 7 constants, handling $31m$ settings and arbitrary in-plane angles)
   - `monoclinic` (13 constants)
   - `triclinic` (21 constants)
+- **Fast Symmetry & Orientation Check:** `elastic-ase --check POSCAR` provides instant space group classification, independent constants, and recommended workflow without running any energy evaluations.
+- **Publication-Quality Anisotropic Visualizations:** Seamlessly integrated with `elastic-vis` for 2D polar plots and 3D anisotropic surfaces (Young's modulus, Shear modulus, Poisson's ratio, and linear compressibility).
+- **Direct Stiffness Export:** Export plain $6 \times 6$ Voigt stiffness matrix files (`-o matrix.txt`), fully compatible with `elastic-vis` and `numpy.loadtxt`.
 - **Born Mechanical Stability Validation:** Automatically checks theoretical stability criteria.
 - **Polycrystalline Moduli:** Computes Voigt, Reuss, and Hill Bulk ($K$), Shear ($G$), Young's ($E$) moduli, Poisson's ratio ($\nu$), Pugh ductility ratio ($K/G$), Cauchy pressure, and Zener anisotropy.
 - **Internal Atomic Relaxation:** Supports optional ASE optimizers (e.g., `BFGS`) for non-affine multi-atom unit cells.
@@ -51,18 +56,32 @@ elastic-ase POSCAR -c emt
 # Using GRACE machine learning foundation model:
 elastic-ase POSCAR -c grace -m GRACE-2L-OAM
 
-# Save output to JSON or CSV:
+# Symmetry check without running calculations:
+elastic-ase POSCAR --check
+
+# Save output to JSON, CSV, or plain 6x6 text matrix:
 elastic-ase structure.cif -c grace -m GRACE-2L-OAM -o results.json
 elastic-ase structure.cif -c grace -m GRACE-2L-OAM -o results.csv
+elastic-ase structure.cif -c grace -m GRACE-2L-OAM -o C.txt
+
+# Calculate and generate 2D & 3D directional plots (via elastic-vis):
+elastic-ase structure.cif -c grace -m GRACE-2L-OAM --plot --Young --Shear --2D --3D --format png
+elastic-ase structure.cif -c grace -m GRACE-2L-OAM --plot --Poisson --LC --format pdf
 ```
 
 ### CLI Options
+- `--check`: Instant symmetry and orientation check without calculations.
 - `-c, --calculator`: `emt` or `grace` (default: `emt`).
 - `-m, --model`: GRACE model name (default: `GRACE-2L-OAM`).
-- `-s, --symmetry`: Crystal symmetry family (`auto`, `cubic`, `hexagonal`, etc., default: `auto`).
+- `-s, --symmetry`: Crystal symmetry family (`auto`, `cubic`, `hexagonal`, `tetragonal_1`, `tetragonal_2`, `orthogonal`, `trigonal_1`, `trigonal_2`, `monoclinic`, `triclinic`).
 - `--strains`: Comma-separated strain list (default: `-0.01,-0.005,0.0,0.005,0.01`).
-- `-o, --output`: File path to export results (`.json` or `.csv`).
+- `-o, --output`: File path to export results (`.json`, `.csv`, or `.txt` for 6x6 matrix).
 - `-q, --quiet`: Suppress verbose terminal logs.
+- `--plot`: Enable anisotropic property visualization.
+- `--Young`, `--Shear`, `--Poisson`, `--LC`: Property selection.
+- `--2D`, `--3D`: Dimension selection.
+- `--format`: Image format (`png`, `pdf`, `svg`).
+- `--style`: Path to custom JSON styling configuration.
 
 ---
 

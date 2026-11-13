@@ -10,6 +10,73 @@ from elastic_ase.average import calculate_polycrystalline_averages
 
 EV_TO_GPA = 160.21766208
 
+def check_symmetry(atoms: Atoms, symprec: float = 1e-3, verbose: bool = True):
+    """
+    Analyzes crystal symmetry of the structure using spglib.
+    Returns a dict with space group info, Laue class, independent constants, and recommended workflow.
+    """
+    try:
+        import spglib
+        cell_data = (atoms.get_cell(), atoms.get_scaled_positions(), atoms.get_atomic_numbers())
+        dataset = spglib.get_symmetry_dataset(cell_data, symprec=symprec)
+        if dataset is None:
+            return {"space_group": "Unknown", "number": 0, "recommended": "cubic"}
+
+        spg = dataset.number
+        if 195 <= spg <= 230:
+            system, laue, recommended = "cubic", "m-3m", "cubic"
+            constants = ("C11", "C12", "C44")
+        elif 168 <= spg <= 194:
+            system, laue, recommended = "hexagonal", "6/mmm", "hexagonal"
+            constants = ("C11", "C12", "C13", "C33", "C44")
+        elif 143 <= spg <= 167:
+            system = "trigonal II" if spg <= 148 else "trigonal I"
+            laue = "-3" if spg <= 148 else "-3m"
+            recommended = "trigonal_2"
+            constants = ("C11", "C12", "C13", "C33", "C44", "C14", "C15")
+        elif 89 <= spg <= 142:
+            system, laue, recommended = "tetragonal I", "4/mmm", "tetragonal_1"
+            constants = ("C11", "C12", "C13", "C33", "C44", "C66")
+        elif 75 <= spg <= 88:
+            system, laue, recommended = "tetragonal II", "4/m", "tetragonal_2"
+            constants = ("C11", "C12", "C13", "C33", "C44", "C66", "C16")
+        elif 16 <= spg <= 74:
+            system, laue, recommended = "orthorhombic", "mmm", "orthogonal"
+            constants = ("C11", "C22", "C33", "C12", "C13", "C23", "C44", "C55", "C66")
+        elif 3 <= spg <= 15:
+            system, laue, recommended = "monoclinic", "2/m", "monoclinic"
+            constants = ("C11", "C22", "C33", "C12", "C13", "C23", "C44", "C55", "C66", "C15", "C25", "C35", "C46")
+        else:
+            system, laue, recommended = "triclinic", "-1", "triclinic"
+            constants = tuple(f"C{i}{j}" for i in range(1, 7) for j in range(i, 7))
+
+        report = {
+            "formula": atoms.get_chemical_formula(),
+            "natoms": len(atoms),
+            "space_group": dataset.international,
+            "number": spg,
+            "crystal_system": system,
+            "laue_class": laue,
+            "constants": constants,
+            "n_constants": len(constants),
+            "recommended": recommended,
+        }
+
+        if verbose:
+            print("=" * 70)
+            print(f" ElasticASE Symmetry Check: {report['formula']} ({report['natoms']} atoms)")
+            print("=" * 70)
+            print(f" Space group       : {report['space_group']} (#{spg}) – {system} (Laue: {laue})")
+            print(f" Elastic constants : {len(constants)} independent ({', '.join(constants)})")
+            print(f" Recommended mode  : {recommended}")
+            print("=" * 70)
+
+        return report
+    except Exception as e:
+        if verbose:
+            print(f"[ElasticASE] Symmetry check failed: {e}")
+        return {"space_group": "Unknown", "number": 0, "recommended": "cubic"}
+
 def auto_detect_symmetry(atoms):
     """
     Auto-detect crystal symmetry family using spglib if available.
@@ -29,8 +96,10 @@ def auto_detect_symmetry(atoms):
             # This avoids silent errors in '31m'-type groups (P-31m, P-31c, P31m, etc.)
             # and works for any arbitrary in-plane rotation about z.
             return "trigonal_2"
-        elif 75 <= spg <= 142:
-            return "orthogonal"  # tetragonal treated as orthogonal
+        elif 89 <= spg <= 142:
+            return "tetragonal_1"  # 4/mmm (6 independent constants)
+        elif 75 <= spg <= 88:
+            return "tetragonal_2"  # 4/m (7 independent constants including C16)
         elif 16 <= spg <= 74:
             return "orthogonal"
         elif 3 <= spg <= 15:
@@ -53,9 +122,9 @@ def validate_orientation(atoms, symmetry, verbose=True):
     lengths = cell.lengths()
     sym = symmetry.lower().strip()
 
-    if sym in ["hexagonal", "hex", "trigonal_1", "trigonal_2", "trigonal1", "trigonal2"]:
+    if sym in ["hexagonal", "hex", "trigonal_1", "trigonal_2", "trigonal1", "trigonal2", "tetragonal_1", "tetragonal_2", "tetragonal"]:
         # Rhombohedral check: a=b=c, alpha=beta=gamma != 90
-        if abs(lengths[0] - lengths[1]) < 0.05 and abs(lengths[1] - lengths[2]) < 0.05:
+        if sym.startswith("trigonal") and abs(lengths[0] - lengths[1]) < 0.05 and abs(lengths[1] - lengths[2]) < 0.05:
             if abs(angles[0] - angles[1]) < 0.5 and abs(angles[1] - angles[2]) < 0.5 and abs(angles[0] - 90.0) > 1.0:
                 warnings.append(
                     f"Rhombohedral cell detected (angles = {angles[0]:.1f}°). "
@@ -70,7 +139,7 @@ def validate_orientation(atoms, symmetry, verbose=True):
             cos_z = abs(c_vec[2]) / c_len
             if cos_z < 0.90:
                 warnings.append(
-                    f"Hexagonal/Trigonal c-axis is tilted (|cos theta_z| = {cos_z:.2f} < 0.90). "
+                    f"{symmetry.capitalize()} c-axis is tilted (|cos theta_z| = {cos_z:.2f} < 0.90). "
                     "The c-axis must be oriented parallel to Cartesian z."
                 )
 
@@ -306,6 +375,143 @@ class ElasticASE:
         print(f"  Cauchy Pressure      : {self.averages['Cauchy_pressure']:8.2f} GPa")
         print(f"  Zener Anisotropy A   : {self.averages['Zener_anisotropy']:8.2f}")
         print("=" * 70)
+
+    def to_elastic_vis(self):
+        """
+        Converts the calculated 6x6 stiffness matrix to an elastic_vis.Elastic object.
+        """
+        if self.stiffness is None:
+            raise RuntimeError("Must call calculate() before converting to elastic_vis.")
+        from elastic_vis import Elastic
+        return Elastic(self.stiffness)
+
+    def visualize(
+        self,
+        properties=("Young", "Shear"),
+        dimensions=("2D", "3D"),
+        prefix="elastic",
+        style_config=None,
+        show=False,
+        output_format="png"
+    ):
+        """
+        Visualizes directional elastic properties using elastic-vis:
+        - properties: list/tuple containing 'Young', 'Shear', 'Poisson', 'LC' (or 'all')
+        - dimensions: list/tuple containing '2D', '3D' (or 'both')
+        - prefix: filename prefix for saved plots
+        - style_config: optional dict or path to style JSON file
+        - show: whether to display plots interactively
+        - output_format: 'png', 'pdf', or 'svg'
+        """
+        if self.stiffness is None:
+            raise RuntimeError("Must call calculate() before visualising results.")
+
+        import json
+        from elastic_vis import (
+            Elastic,
+            plot_youngs_2d,
+            plot_youngs_3d,
+            plot_shear_2d,
+            plot_shear_3d,
+            plot_poisson_2d,
+            plot_poisson_3d,
+            plot_lc_2d,
+            plot_lc_3d
+        )
+
+        if isinstance(style_config, str):
+            with open(style_config, "r") as f:
+                style_config = json.load(f)
+
+        material = Elastic(self.stiffness)
+
+        if isinstance(properties, str):
+            if properties.lower() == "all":
+                properties = ["Young", "Shear", "Poisson", "LC"]
+            else:
+                properties = [properties]
+        prop_set = {p.lower() for p in properties}
+
+        if isinstance(dimensions, str):
+            if dimensions.lower() in ["both", "all"]:
+                dimensions = ["2D", "3D"]
+            else:
+                dimensions = [dimensions]
+        dim_set = {d.upper() for d in dimensions}
+
+        generated_files = []
+
+        if "young" in prop_set:
+            if "2d" in [d.lower() for d in dim_set]:
+                plot_youngs_2d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Youngs_Modulus_Polar_2D.{output_format}")
+            if "3d" in [d.lower() for d in dim_set]:
+                plot_youngs_3d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Youngs_Modulus_3D.{output_format}")
+
+        if "shear" in prop_set:
+            if "2d" in [d.lower() for d in dim_set]:
+                plot_shear_2d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Shear_Modulus_Polar_2D.{output_format}")
+            if "3d" in [d.lower() for d in dim_set]:
+                plot_shear_3d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Shear_Modulus_3D.{output_format}")
+
+        if "poisson" in prop_set:
+            if "2d" in [d.lower() for d in dim_set]:
+                plot_poisson_2d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Poisson_Ratio_Polar_2D.{output_format}")
+            if "3d" in [d.lower() for d in dim_set]:
+                plot_poisson_3d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Poisson_Ratio_3D.{output_format}")
+
+        if "lc" in prop_set or "linear_compressibility" in prop_set:
+            if "2d" in [d.lower() for d in dim_set]:
+                plot_lc_2d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Linear_Compressibility_Polar_2D.{output_format}")
+            if "3d" in [d.lower() for d in dim_set]:
+                plot_lc_3d(material, prefix=prefix, style_config=style_config, show=show, output_format=output_format)
+                generated_files.append(f"{prefix}_Linear_Compressibility_3D.{output_format}")
+
+        if self.verbose:
+            print(f"[ElasticASE] Visualization saved: {', '.join(generated_files)}")
+
+        return generated_files
+
+    def plot_youngs_3d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Young"], dimensions=["3D"], prefix=prefix, **kwargs)
+
+    def plot_youngs_2d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Young"], dimensions=["2D"], prefix=prefix, **kwargs)
+
+    def plot_shear_3d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Shear"], dimensions=["3D"], prefix=prefix, **kwargs)
+
+    def plot_shear_2d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Shear"], dimensions=["2D"], prefix=prefix, **kwargs)
+
+    def plot_poisson_3d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Poisson"], dimensions=["3D"], prefix=prefix, **kwargs)
+
+    def plot_poisson_2d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["Poisson"], dimensions=["2D"], prefix=prefix, **kwargs)
+
+    def plot_lc_3d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["LC"], dimensions=["3D"], prefix=prefix, **kwargs)
+
+    def plot_lc_2d(self, prefix="elastic", **kwargs):
+        return self.visualize(properties=["LC"], dimensions=["2D"], prefix=prefix, **kwargs)
+
+    def export_matrix(self, filepath: str):
+        """
+        Exports the 6x6 stiffness matrix as a plain space-separated text file,
+        compatible with elastic-vis and numpy.loadtxt.
+        """
+        if self.stiffness is None:
+            raise RuntimeError("Must call calculate() before exporting matrix.")
+        np.savetxt(filepath, self.stiffness, fmt="%.6f")
+        if self.verbose:
+            print(f"[ElasticASE] Exported 6x6 stiffness matrix to {filepath}")
 
     def __repr__(self):
         status = "calculated" if self.stiffness is not None else "uncalculated"
