@@ -1,4 +1,4 @@
-"""Residual stress check, derived properties, fit plots, save/load, Quantum ESPRESSO helpers."""
+"""Residual stress check, derived properties, fit plots, save/load, QE helpers."""
 import os
 import tempfile
 import unittest
@@ -156,7 +156,7 @@ class TestFeatures(unittest.TestCase):
             bad_qe, bad_vasp = os.path.join(tmp, "x.pwo"), os.path.join(tmp, "OUTCAR")
             _write(bad_qe, "Program PWSCF\nconvergence NOT achieved after 100 iterations\n")
             _write(bad_vasp, "aborting loop EDIFF was not reached (unconverged)\n")
-            self.assertIn("Quantum ESPRESSO", codes.not_converged(bad_qe))
+            self.assertIn("QE", codes.not_converged(bad_qe))
             self.assertIn("VASP", codes.not_converged(bad_vasp))
             self.assertIsNone(codes.not_converged(bad_qe, codes.CODES["vasp"]))  # only the given code's check
             # an unconverged pw.x output that ASE cannot parse is still named as unconverged

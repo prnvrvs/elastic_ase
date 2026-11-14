@@ -1,8 +1,8 @@
-"""Elastic constants of fcc aluminium with Quantum ESPRESSO (pw.x), in run folders.
+"""Elastic constants of fcc aluminium with QE (pw.x), in run folders.
 
 Needs: pip install elastic-ase; pw.x (e.g. conda install -c conda-forge qe); and the
        pseudopotential Al.pbe-n-kjpaw_psl.1.0.0.UPF in ./pseudo (from pslibrary or the
-       Quantum ESPRESSO pseudopotential page)
+       QE pseudopotential page)
 Run:   python al_qe.py
 The settings are a quick start (12^3 k-points), not converged for Al.
 """
@@ -21,7 +21,7 @@ atoms.calc = Espresso(
                 "electrons": {"conv_thr": 1e-10}},
     kpts=(12, 12, 12))
 
-ec = ElasticConstants(atoms, code="qe",
+ec = ElasticConstants(atoms, code="QE",
                       command="mpirun -np 6 pw.x -in espresso.pwi > espresso.pwo")
 ec.write_inputs("runs")
 ec.run_jobs("runs")

@@ -8,7 +8,7 @@ be used on their own:
 
 * :mod:`elastic_ase.analysis` – from energies to results (pure functions),
 * :mod:`elastic_ase.rundir` – run folders, saved energies, reading outputs,
-* :mod:`elastic_ase.codes` – one adapter per DFT code (VASP, Quantum ESPRESSO),
+* :mod:`elastic_ase.codes` – one adapter per DFT code (VASP, QE),
 * :mod:`elastic_ase.systems` – the deformation tables,
 * :mod:`elastic_ase.auto`, :mod:`elastic_ase.orientation`, :mod:`elastic_ase.symmetry` –
   symmetry, orientation and the automatic mode,

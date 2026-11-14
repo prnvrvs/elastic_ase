@@ -62,7 +62,7 @@ class QuantumEspresso(Code):
     def plan(self, atoms, calc, files):
         if calc is None or not hasattr(calc, "write_inputfiles"):
             raise ValueError(
-                "Quantum ESPRESSO input needs an ASE Espresso calculator attached (atoms.calc = "
+                "QE input needs an ASE Espresso calculator attached (atoms.calc = "
                 "Espresso(profile=..., pseudopotentials=..., input_data=..., kpts=...)): the "
                 "pseudopotentials and settings come from it. For structures only, use "
                 "write_inputs(workdir, format='espresso-in') without code."
@@ -71,7 +71,7 @@ class QuantumEspresso(Code):
 
     def not_converged(self, path):
         if qe_converged(path) is False:
-            return "Quantum ESPRESSO SCF not converged (convergence NOT achieved)"
+            return "QE SCF not converged (convergence NOT achieved)"
         return None
 
 
@@ -80,14 +80,14 @@ ALIASES = {"espresso": "qe", "quantum_espresso": "qe", "pwscf": "qe"}
 
 
 def get_code(name):
-    """The adapter for a code name ("vasp", "qe", "espresso", ...), or None for None."""
+    """The adapter for a code name ("VASP", "QE", "espresso", ...; any case), or None for None."""
     if name is None:
         return None
     if isinstance(name, Code):
         return name
     key = ALIASES.get(str(name).lower(), str(name).lower())
     if key not in CODES:
-        raise ValueError(f"Unknown code {name!r}; choose from {sorted(CODES)} (or give output= and command=)")
+        raise ValueError(f"Unknown code {name!r}; choose from {sorted(c.upper() for c in CODES)} (or give output= and command=)")
     return CODES[key]
 
 
@@ -142,7 +142,7 @@ def vasp_converged(path):
 
 
 def qe_converged(path):
-    """True/False for a Quantum ESPRESSO pw.x output (SCF convergence), None for other files."""
+    """True/False for a QE pw.x output (SCF convergence), None for other files."""
     try:
         with open(path, errors="replace") as f:
             text = f.read()

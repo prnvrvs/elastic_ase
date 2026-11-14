@@ -67,7 +67,7 @@ Below is every argument with its default value, grouped by what it controls:
        verbose=True,                # print progress and the report
 
        # DFT run folders only (see the DFT codes page)
-       code=None,                   # "vasp" or "qe"
+       code=None,                   # "VASP" or "QE"
        command=None,                # e.g. "mpirun -np 16 vasp_std"
        output=None,                 # output file to read, e.g. "vasprun.xml"
    )
@@ -137,7 +137,7 @@ Two typical changes:
      - ``True`` (default): print progress and the full report; ``False``: no output on the
        screen. The messages also go to the ``"elastic_ase"`` logger.
    * - ``code``
-     - DFT run folders only: ``"vasp"`` or ``"qe"`` (Quantum ESPRESSO). Sets what
+     - DFT run folders only: ``"VASP"`` or ``"QE"``. Sets what
        ``write_inputs`` writes, which output file is read and checked, and the default
        command of ``run_jobs`` (see :doc:`dft`).
    * - ``command``

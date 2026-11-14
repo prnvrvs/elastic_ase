@@ -40,7 +40,7 @@ constants (VASP run folders; the same works with an ASE calculator and ``calcula
        kpoints = f"KPOINTS_{k}"
        with open(kpoints, "w") as f:
            f.write(f"{k}x{k}x{k}\n0\nGamma\n {k} {k} {k}\n 0 0 0\n")
-       ec = ElasticConstants(atoms, code="vasp",
+       ec = ElasticConstants(atoms, code="VASP",
                              command="mpirun -np 8 vasp_std", verbose=False)
        work = f"kconv/k{k}"
        files = {"INCAR": "INCAR", "KPOINTS": kpoints, "POTCAR": "POTCAR"}

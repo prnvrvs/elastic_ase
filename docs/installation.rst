@@ -52,7 +52,7 @@ Calculators
 
 elastic_ase needs only an ASE calculator that returns the energy; install the one you use
 separately. EMT and EAM are built into ASE; machine-learning potentials (GRACE, MACE, …), GPAW,
-VASP and Quantum ESPRESSO are installed on their own (:doc:`examples/calculators`).
+VASP and QE are installed on their own (:doc:`examples/calculators`).
 
 Check the installation
 ----------------------

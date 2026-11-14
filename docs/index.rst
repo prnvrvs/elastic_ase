@@ -8,7 +8,7 @@ elastic_ase
      <h1>Elastic constants with ASE calculators.</h1>
      <p>
        Give it a relaxed structure. elastic_ase finds the symmetry, applies the strains,
-       gets the energies &ndash; from an ASE calculator, or from VASP and Quantum ESPRESSO
+       gets the energies &ndash; from an ASE calculator, or from VASP and QE
        run folders &ndash; and returns the 6&times;6 stiffness matrix.
      </p>
      <div class="ev-hero__actions">
@@ -30,8 +30,8 @@ Two ways to run
      - ``ElasticConstants(atoms).calculate()`` – everything in memory, in one call.
        See :doc:`quickstart` and :doc:`guide/calculators`.
    * - **DFT run folders**
-       (VASP, Quantum ESPRESSO)
-     - ``ElasticConstants(atoms, code="vasp")`` writes one folder per calculation, runs them or
+       (VASP, QE)
+     - ``ElasticConstants(atoms, code="VASP")`` writes one folder per calculation, runs them or
        lets you submit them, tracks which are done / failed / pending and reads the outputs
        back. See :doc:`guide/dft`.
 
@@ -48,7 +48,7 @@ What elastic_ase checks for you
   cannot measure the crystal in its orientation (:doc:`guide/orientation`).
 * **Residual stress** – a reference cell that is not relaxed biases the constants; the residual
   pressure is estimated from the fits and reported.
-* **Every run** – crashed, unconverged (VASP, Quantum ESPRESSO), unreadable or mixed-up
+* **Every run** – crashed, unconverged (VASP, QE), unreadable or mixed-up
   outputs are listed and can be repeated alone.
 * **The curves** – ``plot_fits()`` shows every energy–strain curve with its fit.
 
@@ -59,8 +59,8 @@ Where to go
   :doc:`step by step <examples/step_by_step>`.
 * **Your crystal?** :doc:`examples/laue` – one worked example for each of the 11 Laue groups:
   the method elastic_ase uses and the result.
-* **Your calculator?** :doc:`examples/calculators` (EAM, GRACE, MACE, GPAW, Quantum ESPRESSO)
-  and :doc:`guide/dft` for VASP and Quantum ESPRESSO run folders.
+* **Your calculator?** :doc:`examples/calculators` (EAM, GRACE, MACE, GPAW, QE)
+  and :doc:`guide/dft` for VASP and QE run folders.
 * **Before production runs:** :doc:`guide/convergence`.
 * **Something specific?** The :doc:`command line <guide/cli>`, the
   :doc:`Python API <api/index>`, or the :doc:`theory`.

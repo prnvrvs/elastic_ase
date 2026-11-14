@@ -1,5 +1,5 @@
-DFT codes: VASP, Quantum ESPRESSO, …
-====================================
+DFT codes: VASP, QE, …
+======================
 
 A DFT calculation takes minutes to hours, can fail, and usually runs on a cluster. elastic_ase
 therefore works with **run folders**: one folder per calculation, written by elastic_ase, run
@@ -13,7 +13,7 @@ which output file to read and check, and which command to run.
    from ase.io import read
    from elastic_ase import ElasticConstants
 
-   ec = ElasticConstants(read("POSCAR"), code="vasp",
+   ec = ElasticConstants(read("POSCAR"), code="VASP",
                          command="mpirun -np 16 vasp_std")
    files = {"INCAR": "INCAR", "KPOINTS": "KPOINTS", "POTCAR": "POTCAR"}
    ec.write_inputs("runs", files=files)
@@ -79,7 +79,7 @@ VASP
 
    .. code-block:: python
 
-      ec = ElasticConstants(read("CONTCAR"), code="vasp",
+      ec = ElasticConstants(read("CONTCAR"), code="VASP",
                             command="mpirun -np 16 vasp_std")
       files = {"INCAR": "INCAR", "KPOINTS": "KPOINTS", "POTCAR": "POTCAR"}
       ec.write_inputs("runs", files=files)
@@ -105,8 +105,8 @@ input (INCAR, KPOINTS, POSCAR, POTCAR) from the calculator instead (ASE needs
 Shortcuts with the code fixed: ``vasp_input(workdir, incar=, kpoints=, potcar=)``,
 ``vasp_status(workdir)`` and ``vasp_output(workdir)``.
 
-Quantum ESPRESSO
-----------------
+QE
+--
 
 You need a pw.x executable (for example ``conda install -c conda-forge qe``) and the
 pseudopotentials, e.g. from the `SSSP library
@@ -129,7 +129,7 @@ The input is written from an ASE ``Espresso`` calculator, whose pseudopotentials
        kpts=(16, 16, 16))
 
    cmd = "mpirun -np 16 pw.x -in espresso.pwi > espresso.pwo"
-   ec = ElasticConstants(atoms, code="qe", command=cmd)
+   ec = ElasticConstants(atoms, code="QE", command=cmd)
    ec.write_inputs("runs")
    ec.run_jobs("runs")
    results = ec.read_results("runs")
@@ -191,7 +191,7 @@ those folders:
 
 .. code-block:: python
 
-   ec = ElasticConstants(read("CONTCAR"), code="vasp")
+   ec = ElasticConstants(read("CONTCAR"), code="VASP")
    ec.status("runs")
    ec.write_inputs("runs", files={...}, runs=ec.missing("runs"))
    # ... resubmit them ...

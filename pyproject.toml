@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
-keywords = ["elastic constants", "stiffness", "ASE", "DFT", "VASP", "Quantum ESPRESSO", "materials science"]
+keywords = ["elastic constants", "stiffness", "ASE", "DFT", "VASP", "QE", "Quantum ESPRESSO", "materials science"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",

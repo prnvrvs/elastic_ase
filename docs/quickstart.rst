@@ -143,6 +143,6 @@ Next steps
 
 * A complete calculation for a real crystal, step by step: :doc:`examples/step_by_step`.
 * Your crystal symmetry: :doc:`examples/laue`. Your calculator: :doc:`examples/calculators`.
-* DFT with VASP or Quantum ESPRESSO: :doc:`guide/dft`.
+* DFT with VASP or QE: :doc:`guide/dft`.
 * Your crystal is not cubic, or not in the standard orientation: :doc:`guide/orientation`.
 * Everything in the results: :doc:`guide/results`.

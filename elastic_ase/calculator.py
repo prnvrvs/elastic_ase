@@ -192,7 +192,7 @@ class ElasticASE:
         verbose : bool
             Print progress and the report (messages also go to the "elastic_ase" logger).
         code : str, optional
-            DFT code of the run folders, "vasp" or "qe" (Quantum ESPRESSO). Sets what
+            DFT code of the run folders, "VASP" or "QE". Sets what
             write_inputs() writes, which output file status() / read_results() read and check,
             and the default command of run_jobs().
         command : str, optional
@@ -416,7 +416,7 @@ class ElasticASE:
         (a list of run names as given by status()), with the attached calculator.
 
         Each run gets its own folder workdir/<run> (the calculator's ``directory`` is set to
-        it, so VASP, Quantum ESPRESSO, ... keep every run's output). Each energy is saved to
+        it, so VASP, QE, ... keep every run's output). Each energy is saved to
         workdir/energies.json as soon as it is computed. A run that raises an error, or whose
         calculator reports ``converged = False`` (ASE's VASP calculator after an unconverged
         SCF), is recorded as failed and the other runs still go ahead.
@@ -505,11 +505,11 @@ class ElasticASE:
 
         What is written depends on the code (argument or constructor):
 
-        * ``code="vasp"``: a POSCAR in every folder plus the ``files`` given, e.g.
+        * ``code="VASP"``: a POSCAR in every folder plus the ``files`` given, e.g.
           ``files={"INCAR": "INCAR", "KPOINTS": "KPOINTS", "POTCAR": "POTCAR"}`` (copied
           unchanged; the POTCAR element order is checked against the POSCAR). With no files
           and an ASE ``Vasp`` calculator attached, the full input is written from it.
-        * ``code="qe"``: espresso.pwi written from the attached ASE ``Espresso`` calculator.
+        * ``code="QE"``: espresso.pwi written from the attached ASE ``Espresso`` calculator.
         * no code: the attached file-based calculator's input, or else the structure written
           with ``ase.io.write(..., format=format)``; ``files`` are copied into every folder.
 
@@ -621,7 +621,7 @@ class ElasticASE:
         analyse.
 
         Each file must hold the strained cell this run expects (catches mixed-up folders), and
-        the code's convergence check (VASP, Quantum ESPRESSO) must pass. Missing, unreadable,
+        the code's convergence check (VASP, QE) must pass. Missing, unreadable,
         mismatched or unconverged runs are all listed in one RuntimeError; see status() and
         write_inputs(..., runs=...) to resubmit them.
         """
@@ -636,32 +636,32 @@ class ElasticASE:
     # --------------------------------------------------------- code shortcuts
     def vasp_input(self, workdir, incar=None, kpoints=None, potcar=None, runs=None):
         """VASP run folders: POSCAR plus your INCAR, KPOINTS and POTCAR (copied unchanged).
-        Same as write_inputs(workdir, files={...}, code="vasp"). Without files and with an ASE
+        Same as write_inputs(workdir, files={...}, code="VASP"). Without files and with an ASE
         ``Vasp`` calculator attached, the full input is written from the calculator."""
         files = {name: path for name, path in (("INCAR", incar), ("KPOINTS", kpoints), ("POTCAR", potcar))
                  if path is not None}
-        return self.write_inputs(workdir, runs=runs, files=files, code="vasp")
+        return self.write_inputs(workdir, runs=runs, files=files, code="VASP")
 
     def vasp_status(self, workdir, filename=None):
         """status() of the VASP runs in workdir, from their OUTCARs."""
-        return self.status(workdir, filename=filename, code="vasp")
+        return self.status(workdir, filename=filename, code="VASP")
 
     def vasp_output(self, workdir, filename=None):
         """read_results() of the VASP runs in workdir (OUTCAR, or ``filename``)."""
-        return self.read_results(workdir, filename=filename, code="vasp")
+        return self.read_results(workdir, filename=filename, code="VASP")
 
     def qe_input(self, workdir, runs=None):
-        """Quantum ESPRESSO run folders (espresso.pwi) from the attached ASE ``Espresso``
-        calculator. Same as write_inputs(workdir, code="qe")."""
-        return self.write_inputs(workdir, runs=runs, code="qe")
+        """QE run folders (espresso.pwi) from the attached ASE ``Espresso``
+        calculator. Same as write_inputs(workdir, code="QE")."""
+        return self.write_inputs(workdir, runs=runs, code="QE")
 
     def qe_status(self, workdir, filename=None):
-        """status() of the Quantum ESPRESSO runs in workdir, from their pw.x outputs."""
-        return self.status(workdir, filename=filename, code="qe")
+        """status() of the QE runs in workdir, from their pw.x outputs."""
+        return self.status(workdir, filename=filename, code="QE")
 
     def qe_output(self, workdir, filename=None):
-        """read_results() of the Quantum ESPRESSO runs in workdir (espresso.pwo)."""
-        return self.read_results(workdir, filename=filename, code="qe")
+        """read_results() of the QE runs in workdir (espresso.pwo)."""
+        return self.read_results(workdir, filename=filename, code="QE")
 
     # --------------------------------------------------------------- analysis
     def _analyse(self, energies):

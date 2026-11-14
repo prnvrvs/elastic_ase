@@ -286,12 +286,12 @@ class TestWorkflows(unittest.TestCase):
         ec = ElasticASE(al(), strains=STRAINS, verbose=False, code="VASP")
         self.assertEqual((ec.code, ec._output_name()), ("vasp", "OUTCAR"))
         self.assertEqual(ElasticASE(al(), verbose=False, code="espresso")._output_name(), "espresso.pwo")
-        self.assertEqual(ElasticASE(al(), verbose=False, code="vasp", output="vasprun.xml")._output_name(), "vasprun.xml")
-        self.assertEqual(ec._output_name(code="qe"), "espresso.pwo")
+        self.assertEqual(ElasticASE(al(), verbose=False, code="VASP", output="vasprun.xml")._output_name(), "vasprun.xml")
+        self.assertEqual(ec._output_name(code="QE"), "espresso.pwo")
         with self.assertRaises(ValueError):
             ElasticASE(al(), verbose=False, code="castepp")
         with tempfile.TemporaryDirectory() as tmp:
-            ec.write_inputs(tmp)  # code="vasp": POSCAR folders
+            ec.write_inputs(tmp)  # code="VASP": POSCAR folders
             self.assertTrue(os.path.exists(os.path.join(tmp, "C44", "strain_+0.002000", "POSCAR")))
             self.assertEqual(len(ec.status(tmp)["pending"]), 13)  # reads OUTCARs (none yet)
 

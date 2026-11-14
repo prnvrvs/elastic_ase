@@ -10,10 +10,10 @@ Changelog
   multi-atom cells gave clamped-ion constants by default. ``optimizer=`` still chooses the
   optimizer. 1-atom cells are not affected. The report shows the setting ("Atom relaxation");
   the command line has ``--no-relaxation`` and ``--fmax``.
-* Fixed: an unconverged Quantum ESPRESSO run whose output ASE cannot read was reported with
+* Fixed: an unconverged QE run whose output ASE cannot read was reported with
   ASE's read error; it is now reported as "SCF not converged" (the convergence check runs
   before reading). Found with a real pw.x run.
-* Fixed: a relative Quantum ESPRESSO ``pseudo_dir`` (e.g. ``"pseudo"``) was looked up inside
+* Fixed: a relative QE ``pseudo_dir`` (e.g. ``"pseudo"``) was looked up inside
   every run folder, so pw.x could not find the pseudopotentials; it is now taken relative to
   the folder you start from.
 * Under MPI (e.g. GPAW with ``mpiexec``) the report is printed once, not by every process.
@@ -21,7 +21,7 @@ Changelog
   Python floats, so printing them shows ``{'C11': 53.2, ...}`` instead of ``np.float64(...)``.
 * Documentation reorganised around examples: a complete calculation step by step
   (:doc:`examples/step_by_step`), one example for each of the 11 Laue groups
-  (:doc:`examples/laue`) and one for each calculator, including GPAW and Quantum ESPRESSO
+  (:doc:`examples/laue`) and one for each calculator, including GPAW and QE
   (:doc:`examples/calculators`). The "What is tested" page is replaced by :doc:`testing`
   (comparison with the stress–strain method, published potentials and experiment).
 
@@ -45,10 +45,10 @@ Changelog
 0.0.1 (first release)
 ---------------------
 
-* Run folders for DFT codes: ``code="vasp"`` / ``"qe"`` with ``write_inputs``, ``run_jobs``,
+* Run folders for DFT codes: ``code="VASP"`` / ``"QE"`` with ``write_inputs``, ``run_jobs``,
   ``status``, ``missing``, ``is_complete`` and ``read_results`` (plus ``vasp_*`` / ``qe_*``
   shortcuts); ``calculate(workdir=...)`` saves every energy and resumes after failures.
-  Unconverged VASP and Quantum ESPRESSO runs are detected.
+  Unconverged VASP and QE runs are detected.
 * Rotation into the standard setting is now a rigid rotation of the given structure: the cell,
   the atoms and per-atom data (magnetic moments, tags, constraints) are kept. Before, the cell
   was replaced by spglib's conventional cell.

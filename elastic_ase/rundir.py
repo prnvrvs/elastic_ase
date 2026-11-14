@@ -135,7 +135,7 @@ def set_directory(calc, path):
     """Point a file-based calculator at another run folder, keeping its type (str or Path).
 
     The calculation then runs inside that folder, so a relative pseudopotential folder
-    (Quantum ESPRESSO ``pseudo_dir``) is made absolute first: relative to where you started,
+    (QE ``pseudo_dir``) is made absolute first: relative to where you started,
     not to the run folder."""
     _absolute_pseudo_dir(calc)
     calc.directory = Path(path) if isinstance(calc.directory, Path) else str(path)

@@ -4,7 +4,7 @@ Second-order elastic constants ($C_{ij}$) from energy–strain calculations with
 calculators. elastic_ase is the ASE counterpart of
 [elastic_vasp](https://github.com/prnvrvs/elastic_vasp): the same deformation tables and
 analysis, with the energies from an ASE calculator (run in memory) or from DFT run folders
-(VASP, Quantum ESPRESSO) that elastic_ase writes and reads back.
+(VASP, QE) that elastic_ase writes and reads back.
 
 **Documentation:** https://prnvrvs.github.io/elastic_ase/
 
@@ -55,7 +55,7 @@ With VASP run folders (run them with `run_jobs` or submit them on a cluster):
 from ase.io import read
 from elastic_ase import ElasticConstants
 
-ec = ElasticConstants(read("CONTCAR"), code="vasp", command="mpirun -np 16 vasp_std")
+ec = ElasticConstants(read("CONTCAR"), code="VASP", command="mpirun -np 16 vasp_std")
 ec.write_inputs("runs", files={"INCAR": "INCAR", "KPOINTS": "KPOINTS", "POTCAR": "POTCAR"})
 ec.run_jobs("runs")                   # only runs without a usable OUTCAR
 ec.status("runs")                     # done / failed / pending
@@ -69,7 +69,7 @@ The [documentation](https://prnvrvs.github.io/elastic_ase/) has a
 [step-by-step example](https://prnvrvs.github.io/elastic_ase/examples/step_by_step.html),
 [an example for every crystal symmetry](https://prnvrvs.github.io/elastic_ase/examples/laue.html)
 and [for every calculator](https://prnvrvs.github.io/elastic_ase/examples/calculators.html),
-guides to [VASP and Quantum ESPRESSO](https://prnvrvs.github.io/elastic_ase/guide/dft.html),
+guides to [VASP and QE](https://prnvrvs.github.io/elastic_ase/guide/dft.html),
 [convergence](https://prnvrvs.github.io/elastic_ase/guide/convergence.html),
 [symmetry and orientation](https://prnvrvs.github.io/elastic_ase/guide/orientation.html) and
 [the results](https://prnvrvs.github.io/elastic_ase/guide/results.html), the

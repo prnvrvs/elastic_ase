@@ -132,8 +132,8 @@ The calculator (the rest is as above):
 
 Script: :download:`al_gpaw.py <scripts/al_gpaw.py>`.
 
-Quantum ESPRESSO in run folders
--------------------------------
+QE in run folders
+-----------------
 
 For DFT codes it is often better to write one folder per calculation, run them – here or on a
 cluster – and read the results back. The settings come from an ASE ``Espresso`` calculator.
@@ -177,7 +177,7 @@ yourself and call ``read_results`` afterwards (:doc:`../guide/dft`).
      - 24.2
 
 These settings (12³ k-points, 40 Ry) are a quick start, not converged for Al.
-Script: :download:`al_qe.py <scripts/al_qe.py>`. VASP works the same way with ``code="vasp"``
+Script: :download:`al_qe.py <scripts/al_qe.py>`. VASP works the same way with ``code="VASP"``
 and your INCAR, KPOINTS and POTCAR (:doc:`../guide/dft`).
 
 Comparison
@@ -207,7 +207,7 @@ Comparison
      - 118.8
      - 57.8
      - 33.9
-   * - Quantum ESPRESSO, PBE, 12³ k-points
+   * - QE, PBE, 12³ k-points
      - 100.0
      - 68.5
      - 24.2
