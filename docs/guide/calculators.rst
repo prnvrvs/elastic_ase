@@ -38,41 +38,118 @@ Worked examples: :doc:`../examples/step_by_step`, one for every crystal symmetry
 Options
 -------
 
+All options are arguments of ``ElasticConstants``; leave out the ones you do not change.
+Below is every argument with its default value, grouped by what it controls:
+
+.. code-block:: python
+
+   from ase.optimize import BFGS
+   from elastic_ase import ElasticConstants
+
+   ec = ElasticConstants(
+       atoms,                       # relaxed structure, with atoms.calc attached
+
+       # which deformations are applied
+       symmetry="auto",             # symmetry table: detected, or e.g. "cubic"
+       strains=[-0.01, -0.005, 0, 0.005, 0.01],  # strain values of every deformation
+
+       # what happens inside every strained cell
+       relaxation=True,             # relax the atoms (relaxed-ion constants)
+       optimizer=BFGS,              # optimizer of that relaxation
+       fmax=1e-3,                   # its force criterion (eV/Å)
+
+       # orientation and symmetry detection
+       reorient=True,               # rotate the structure into the standard setting
+       frame="cartesian",           # frame of results["stiffness_matrix"]
+       symprec=1e-3,                # spglib tolerance (Å)
+
+       # output on the screen
+       verbose=True,                # print progress and the report
+
+       # DFT run folders only (see the DFT codes page)
+       code=None,                   # "vasp" or "qe"
+       command=None,                # e.g. "mpirun -np 16 vasp_std"
+       output=None,                 # output file to read, e.g. "vasprun.xml"
+   )
+   results = ec.calculate(workdir=None)   # workdir="runs": keep every run, restartable
+
+Two typical changes:
+
+.. code-block:: python
+
+   # accurate relaxation of the atoms in a multi-atom cell
+   ec = ElasticConstants(atoms, fmax=1e-4)
+
+   # clamped-ion constants with larger strains
+   ec = ElasticConstants(atoms, relaxation=False, strains=[-0.02, -0.01, 0, 0.01, 0.02])
+
 .. list-table::
    :header-rows: 1
    :widths: 22 78
 
    * - Argument
      - Meaning
+   * - ``atoms``
+     - The relaxed structure (``ase.Atoms``) with the calculator attached as
+       ``atoms.calc``. It is copied; your ``atoms`` object is not changed.
    * - ``symmetry``
-     - ``"auto"`` (default: detected with spglib) or a named table: ``"cubic"``,
-       ``"hexagonal"``, ``"tetragonal_1"``, ``"tetragonal_2"``, ``"trigonal_1"``,
-       ``"trigonal_2"``, ``"orthogonal"`` (= ``"orthorhombic"``), ``"monoclinic"``,
-       ``"triclinic"`` (see :doc:`systems`).
+     - ``"auto"`` (default): detected with spglib, the fewest deformations for the crystal.
+       Or a named table: ``"cubic"``, ``"hexagonal"``, ``"tetragonal_1"``,
+       ``"tetragonal_2"``, ``"trigonal_1"``, ``"trigonal_2"``, ``"orthogonal"``
+       (= ``"orthorhombic"``), ``"monoclinic"``, ``"triclinic"`` (see :doc:`systems`).
+       ``check_symmetry(atoms)`` shows which tables work for your structure.
    * - ``strains``
-     - Strain values :math:`\delta` (at least 3 different ones; default
-       ``[-0.01, -0.005, 0, 0.005, 0.01]``). Use values symmetric around zero; ±0.5–1 % is a
-       good range for most solids, larger strains bring in anharmonic terms.
+     - Strain values :math:`\delta` applied with every deformation (at least 3 different
+       ones; default ``[-0.01, -0.005, 0, 0.005, 0.01]``). Use values symmetric around zero;
+       ±0.5–1 % is a good range for most solids. Smaller strains make the fit sensitive to
+       numerical noise, larger ones bring in anharmonic terms.
    * - ``relaxation``
      - ``True`` (default): relax the atoms inside every strained cell – *relaxed-ion*
        constants, the ones to compare with experiment. The atoms of a multi-atom cell move
        when the cell is strained, also in diamond Si or hcp metals under shear.
-       ``False``: keep them at their scaled positions – *clamped-ion* constants. A 1-atom
-       cell is never relaxed (nothing to relax). The calculator must return forces;
-       constraints such as ``FixAtoms`` are respected.
-   * - ``optimizer``, ``fmax``
-     - The ASE optimizer class of that relaxation (default ``BFGS``) and its force
-       criterion in eV/Å (default ``1e-3``; ``1e-4`` for accurate constants).
+       ``False``: keep them at their scaled positions – *clamped-ion* constants.
+
+       * The relaxation uses forces, so the calculator must provide them (energy-only
+         calculators need ``relaxation=False``).
+       * In a 1-atom cell (fcc, bcc metals) the forces stay zero under strain, so the
+         relaxation is skipped and costs nothing.
+       * To keep some atoms in place, fix them with ``atoms.set_constraint(FixAtoms(...))``
+         before creating ``ElasticConstants``; the relaxation leaves them where they are.
+   * - ``optimizer``
+     - The ASE optimizer class used for that relaxation (default ``BFGS``), e.g. ``FIRE`` or
+       ``LBFGS`` from ``ase.optimize``. Pass the class, not an instance.
+   * - ``fmax``
+     - Force criterion of the relaxation in eV/Å (default ``1e-3``). ``1e-4`` gives more
+       accurate constants for multi-atom cells at the cost of more force calls.
    * - ``reorient``
-     - ``True`` (default): rotate the structure rigidly into the standard setting.
-       ``False``: keep it as given (see :doc:`orientation`).
+     - ``True`` (default): rotate the structure rigidly into the standard crystallographic
+       setting before straining (cell shape and atoms unchanged). ``False``: keep it as
+       given (see :doc:`orientation`).
    * - ``frame``
-     - ``"cartesian"`` (default): C in the frame of the calculation; ``"standard"``: in the
-       standard crystallographic setting.
+     - Frame of ``results["stiffness_matrix"]``: ``"cartesian"`` (default) – the frame of
+       your input structure; ``"standard"`` – the standard crystallographic setting, the one
+       tables of elastic constants use (see :doc:`orientation`).
    * - ``symprec``
-     - spglib tolerance in Å (default 1e-3).
+     - Tolerance of the symmetry detection in Å (default ``1e-3``). Increase it (e.g.
+       ``1e-2``) for a structure that is only approximately symmetric, such as one read from
+       a file with few digits.
    * - ``verbose``
-     - Print the report (default ``True``).
+     - ``True`` (default): print progress and the full report; ``False``: no output on the
+       screen. The messages also go to the ``"elastic_ase"`` logger.
+   * - ``code``
+     - DFT run folders only: ``"vasp"`` or ``"qe"`` (Quantum ESPRESSO). Sets what
+       ``write_inputs`` writes, which output file is read and checked, and the default
+       command of ``run_jobs`` (see :doc:`dft`).
+   * - ``command``
+     - DFT run folders only: the shell command ``run_jobs`` runs in every folder, e.g.
+       ``"mpirun -np 16 vasp_std"``.
+   * - ``output``
+     - DFT run folders only: the output file to read in every folder when it is not the
+       code's default, e.g. ``"vasprun.xml"`` (any file ``ase.io.read`` reads).
+   * - ``calculate(workdir=...)``
+     - ``None`` (default): everything in memory. A folder name such as ``"runs"``: every
+       energy is saved as it is computed and a repeated call only does what is missing (see
+       `Keeping the runs: workdir`_ below).
 
 Number of calculations
 ----------------------
