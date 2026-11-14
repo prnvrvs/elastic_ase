@@ -74,18 +74,111 @@ works, not the values):
   deformations.
 * Debye temperature 431 K (experiment 428 K).
 
+**Every Laue class with GRACE-2L-OAM** (structure relaxed with its symmetry fixed; clamped
+ions under strain; the three routes compared through the frame-independent eigenvalues of C)
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 28 16 14 16 16
+
+   * - Laue
+     - Structure (space group)
+     - Table
+     - Constants
+     - default vs triclinic
+     - auto, rotated
+   * - m-3m
+     - NaCl (225)
+     - ``cubic``
+     - 3
+     - 0.02 GPa
+     - 0.04 GPa
+   * - m-3
+     - pyrite FeS₂ (205)
+     - ``cubic``
+     - 3
+     - 0.87 GPa
+     - 0.70 GPa
+   * - 6/mmm
+     - Mg (194)
+     - ``hexagonal``
+     - 5
+     - 0.05 GPa
+     - 0.06 GPa
+   * - 6/m
+     - model crystal (175)
+     - ``hexagonal``
+     - 5
+     - 0.85 GPa
+     - 0.48 GPa
+   * - -3m
+     - corundum Al₂O₃ (167)
+     - ``trigonal_2``
+     - 6
+     - 0.12 GPa
+     - 0.23 GPa
+   * - -3
+     - ilmenite FeTiO₃ (148)
+     - ``trigonal_2``
+     - 7
+     - 0.21 GPa
+     - 0.39 GPa
+   * - 4/mmm
+     - rutile TiO₂ (136)
+     - ``tetragonal_1``
+     - 6
+     - 0.42 GPa
+     - 0.40 GPa
+   * - 4/m
+     - scheelite CaWO₄ (88)
+     - ``tetragonal_2``
+     - 7
+     - 0.08 GPa
+     - 0.11 GPa
+   * - mmm
+     - model crystal (47)
+     - ``orthogonal``
+     - 9
+     - 0.18 GPa
+     - 0.14 GPa
+   * - 2/m
+     - model crystal (10)
+     - ``monoclinic``
+     - 13
+     - 0.05 GPa
+     - 0.14 GPa
+   * - -1
+     - model crystal (2)
+     - ``triclinic``
+     - 21
+     - 0.25 GPa
+     - 0.25 GPa
+
+The model crystals (cell relaxed, atoms fixed) only check the method; their constants are not
+physical. The remaining differences come from the different strains of each route probing the
+anharmonic terms. This run also found that the Laue class reported for space groups 168–176
+(6/m) and 195–206 (m-3) was wrong (fixed; tables and constants were not affected).
+
 **Other ASE calculators** (1-atom fcc Al, cell relaxed with the same calculator first)
 
 * GRACE-2L-OAM (machine-learning potential): :math:`a_0 = 4.043` Å, :math:`C_{11} = 112.8`,
   :math:`C_{12} = 60.5`, :math:`C_{44} = 33.9` GPa, stable, residual pressure from the fits
   0.000 GPa; the command line (``-c grace``) gives the same numbers.
-* GPAW (PBE, plane waves 400 eV, Fermi–Dirac 0.1 eV): the route works (relaxation, 13 runs,
-  analysis), but the values depend strongly on the k-mesh. With 8×8×8 the shear energies are
-  noise (:math:`C_{44} < 0`); the curvature of the :math:`C_{44}` deformation gives
-  −4, 52, 45 and 33 GPa at 8³, 12³, 16³ and 20³; at 20³ the bulk modulus (76.5 GPa) agrees with
-  VASP (77.8 GPa) but :math:`C_{11} - C_{12}` (15 GPa) does not (VASP 43 GPa). Not converged –
-  a reminder that metals need dense k-meshes, which the residual-pressure check cannot detect.
-* MACE could not be tested: the local MACE installation fails on import (two OpenMP runtimes).
+* GPAW (PBE, plane waves, also with MPI): the route works – relaxation, 13 runs, analysis, the
+  primitive and the conventional cell – and the bulk modulus (76–80 GPa) agrees with VASP for
+  every setting. The shear constants of aluminium, however, depend strongly on the k-mesh
+  (Fermi–Dirac and Methfessel–Paxton smearing, 12³–30³): the cutoff (400, 600, 800 eV), the SCF
+  tolerance and the pseudopotential (GPAW's PAW and its built-in HGH) change nothing, but
+  :math:`C_{11} - C_{12}` from the (1, −1, 0) deformation alone is −2.0 GPa at 20³ and 64.7 GPa
+  at 30³ – its whole energy curve spans only 0.66 meV at ±1 % strain. VASP with the tetrahedron
+  method is not fully converged at these meshes either (:math:`C_{44}` between 24 and 36 GPa
+  from 16³ to 32³, while its total energy is within 1 meV/atom from 20³ on). The
+  residual-pressure check cannot detect this; see :doc:`guide/convergence`.
+* MACE (``medium-mpa-0``, double precision): :math:`a_0 = 4.039` Å, :math:`C_{11} = 114.8`,
+  :math:`C_{12} = 64.9`, :math:`C_{44} = 29.3` GPa, stable; the command line
+  (``-c mace.calculators:mace_mp``) gives the same within 0.2 GPa (single precision). (On macOS,
+  a conda NumPy together with a pip PyTorch can load two OpenMP runtimes and abort on import –
+  an installation problem outside elastic_ase.)
 
 **Directional properties (elastic-vis)**
 
@@ -122,7 +215,7 @@ Not tested yet
 * A real pw.x (Quantum ESPRESSO) run through elastic_ase, from input to result.
 * VASP with converged settings through ``run_jobs`` (the VASP values above come from earlier
   runs read back with ``read_results``), larger cells, and VASP in parallel (MPI).
-* Machine-learning potentials other than GRACE (MACE, CHGNet, …): they should work like any
+* Machine-learning potentials other than GRACE and MACE (CHGNet, …): they should work like any
   ASE calculator, but have not been run here.
 * GPAW with converged settings; other DFT codes (CASTEP, ABINIT, …) through
   ``write_inputs`` / ``read_results``.

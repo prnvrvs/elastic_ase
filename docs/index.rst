@@ -25,8 +25,8 @@ Two ways to run
    :widths: 30 70
    :header-rows: 0
 
-   * - **Fast calculators** (tested with EMT and GRACE; other ML potentials should work the
-       same way)
+   * - **Fast calculators** (tested with EMT, EAM, GRACE and MACE; other ML potentials
+       should work the same way)
      - ``ElasticConstants(atoms).calculate()`` – everything in memory.
        See :doc:`quickstart` and :doc:`guide/calculators`.
    * - **DFT codes** (VASP; Quantum ESPRESSO not yet tested with a real run)
@@ -80,6 +80,7 @@ the same deformation tables and analysis, with energies from an ASE calculator o
 
    guide/calculators
    guide/dft
+   guide/convergence
    guide/orientation
    guide/systems
    guide/results

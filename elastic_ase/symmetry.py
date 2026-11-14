@@ -25,7 +25,9 @@ _RANGES = [
     (142, "tetragonal I", "4/mmm", "tetragonal_1"),
     (148, "trigonal II", "-3", "trigonal_2"),
     (167, "trigonal I", "-3m", "trigonal_1"),
+    (176, "hexagonal", "6/m", "hexagonal"),
     (194, "hexagonal", "6/mmm", "hexagonal"),
+    (206, "cubic", "m-3", "cubic"),
     (230, "cubic", "m-3m", "cubic"),
 ]
 

@@ -216,3 +216,4 @@ Convergence
 Do your own convergence tests (cutoff, k-points, smearing): converge the elastic constants
 themselves, not only the total energy, and use the same settings for every run. Metals need
 dense k-point meshes – a coarse mesh gives energy noise as large as the strain energy.
+:doc:`convergence` explains what to converge and gives a script for the k-mesh test.

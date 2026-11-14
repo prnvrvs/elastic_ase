@@ -39,8 +39,8 @@ Calculators
 -----------
 
 elastic_ase needs only an ASE calculator that returns the energy; install the one you use
-separately. Tested here: EMT and EAM (built into ASE), GRACE, GPAW and VASP. Other
-machine-learning potentials (MACE, CHGNet, …) and ASE calculators should work the same way but
+separately. Tested here: EMT and EAM (built into ASE), GRACE, MACE, GPAW and VASP.
+Other machine-learning potentials (CHGNet, …) and ASE calculators should work the same way but
 have not been tested yet (see :doc:`testing`).
 
 Check the installation:

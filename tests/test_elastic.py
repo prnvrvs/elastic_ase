@@ -407,6 +407,17 @@ class TestElasticASE(unittest.TestCase):
         with self.assertRaises(ValueError):
             ElasticASE(al, strains=[0.01, 0.01, -0.01], verbose=False)
 
+    def test_laue_classes_of_all_space_groups(self):
+        from elastic_ase.symmetry import classify
+        expected = {1: "-1", 2: "-1", 3: "2/m", 15: "2/m", 16: "mmm", 74: "mmm", 75: "4/m", 88: "4/m",
+                    89: "4/mmm", 142: "4/mmm", 143: "-3", 148: "-3", 149: "-3m", 167: "-3m",
+                    168: "6/m", 176: "6/m", 177: "6/mmm", 194: "6/mmm", 195: "m-3", 205: "m-3",
+                    206: "m-3", 207: "m-3m", 225: "m-3m", 230: "m-3m"}
+        for number, laue in expected.items():
+            self.assertEqual(classify(number)[1], laue, number)
+        self.assertEqual(classify(176)[2], "hexagonal")   # 6/m and 6/mmm: same 5-constant table
+        self.assertEqual(classify(205)[2], "cubic")       # m-3 and m-3m: same 3-constant table
+
     def test_symmetry_classification_and_report(self):
         from elastic_ase.symmetry import classify, check_symmetry, TRIGONAL_31M
 

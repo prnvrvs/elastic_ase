@@ -92,9 +92,9 @@ the [command line](https://prnvrvs.github.io/elastic_ase/guide/cli.html), the
 - Against published values: the Al EAM potential of Mishin et al. (1999, from NIST) gives
   $C_{11}$ = 113.5, $C_{12}$ = 61.3, $C_{44}$ = 31.6 GPa (published 114.0, 61.6, 31.6) at
   the published lattice constant, from the primitive, conventional and rotated cells alike.
-- GRACE-2L-OAM on 1-atom Al (Python and command line): $C_{11}$ = 112.8, $C_{12}$ = 60.5,
-  $C_{44}$ = 33.9 GPa. GPAW: the route works, but the tested settings were not converged.
-- **Not tested here:** MACE, CHGNet or other ML potentials (they should work like any ASE
+- GRACE-2L-OAM and MACE (medium-mpa-0) on 1-atom Al, from Python and the command line:
+  $C_{11}$ = 112.8 / 114.8, $C_{12}$ = 60.5 / 64.9, $C_{44}$ = 33.9 / 29.3 GPa. GPAW: the route works, but the tested settings were not converged.
+- **Not tested here:** CHGNet or other ML potentials (they should work like any ASE
   calculator), other DFT codes, magnetic systems, larger cells with VASP.
 
 Details: [What is tested](https://prnvrvs.github.io/elastic_ase/testing.html). Please report

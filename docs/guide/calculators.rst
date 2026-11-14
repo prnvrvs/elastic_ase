@@ -2,8 +2,8 @@ Fast calculators (in memory)
 ============================
 
 With a calculator that returns an energy quickly – EMT, a classical potential, a
-machine-learning potential – everything runs in one call (tested with EMT, GRACE and GPAW;
-see :doc:`../testing`):
+machine-learning potential – everything runs in one call (tested with EMT, EAM, GRACE,
+MACE and GPAW; see :doc:`../testing`):
 
 .. code-block:: python
 
@@ -19,7 +19,9 @@ options below.
 Before you start
 ----------------
 
-**Relax the structure** – cell and atoms – with the same calculator and settings. The method
+**Converge the settings** of your calculator on the elastic constants themselves (k-mesh,
+smearing, cutoff; see :doc:`convergence`), then **relax the structure** – cell and atoms –
+with the same calculator and settings. The method
 assumes a stress-free reference; residual stress changes the fitted curvatures by about its
 own size. elastic_ase estimates the residual pressure from the fits and warns above 0.5 GPa
 (see :doc:`results`).

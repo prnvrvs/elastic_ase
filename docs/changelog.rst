@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+* Documentation: new :doc:`guide/convergence` page (what to converge, and a script for the
+  k-mesh test); "What is tested" extended
+  (all 11 Laue classes with GRACE, MACE, GPAW).
+* Fixed: the Laue class reported for space groups 168–176 was "6/mmm" instead of "6/m", and for
+  195–206 "m-3m" instead of "m-3" (``check_symmetry``, ``--check``). The deformation tables and
+  results were not affected: both pairs share the same independent constants.
+
 0.0.2
 -----
 
