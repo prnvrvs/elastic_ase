@@ -94,7 +94,7 @@ def validate_orientation(atoms: Atoms, symmetry: str, verbose: bool = True, symp
     )
     warnings.warn(message)
     if verbose:
-        print(f"[ElasticASE Warning] {message}")
+        report.say(f"[ElasticASE Warning] {message}")
     return [message]
 
 
@@ -113,7 +113,7 @@ def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool 
         rotation, number = auto.standard_setting(atoms, symprec=symprec)
     except Exception as e:
         if verbose:
-            print(f"[ElasticASE] Notice: reorientation skipped ({e})")
+            report.say(f"[ElasticASE] Notice: reorientation skipped ({e})")
         return atoms, False
 
     if np.allclose(rotation, np.eye(3), atol=1e-8):
@@ -123,7 +123,7 @@ def standardize_and_reorient(atoms: Atoms, symprec: float = 1e-3, verbose: bool 
     rotated.calc = atoms.calc
     rotated.set_cell(np.asarray(atoms.get_cell(), float) @ rotation.T, scale_atoms=True)
     if verbose:
-        print(f"[ElasticASE] Reorientation: rotated the structure into the standard setting "
+        report.say(f"[ElasticASE] Reorientation: rotated the structure into the standard setting "
               f"(space group #{number}); cell and atoms unchanged.")
     return rotated, True
 
@@ -148,6 +148,7 @@ class ElasticASE:
         atoms: Atoms,
         symmetry: str = "auto",
         strains=None,
+        relaxation: bool = True,
         optimizer=None,
         fmax: float = 1e-3,
         reorient: bool = True,
@@ -170,10 +171,17 @@ class ElasticASE:
             (= "orthorhombic"), "monoclinic", "triclinic".
         strains : list of float, optional
             Strain values (at least 3 different ones); default -1 % to +1 % in steps of 0.5 %.
+        relaxation : bool
+            Relax the atom positions inside every strained cell (default True). This gives the
+            relaxed-ion constants, the ones that compare with experiment. ``False`` keeps the
+            atoms at their scaled positions (clamped-ion constants). A 1-atom cell has nothing
+            to relax and is never relaxed. Applies to calculate() / run_pending(); in DFT run
+            folders the relaxation is set in the code's own input (e.g. VASP ISIF = 2).
+            Constraints on the atoms (e.g. ``FixAtoms``) are respected.
         optimizer : ASE optimizer class, optional
-            Relaxes the atoms inside every strained cell (calculate / run_pending only).
+            Optimizer of the relaxation; default ``ase.optimize.BFGS``.
         fmax : float
-            Force criterion of the optimizer (eV/Å).
+            Force criterion of the relaxation (eV/Å).
         reorient : bool
             Rotate the structure rigidly into the standard setting (cell and atoms unchanged).
         symprec : float
@@ -196,6 +204,10 @@ class ElasticASE:
         self._code = codes.get_code(code)
         self.command = command
         self.output = output
+        self.relaxation = bool(relaxation)
+        if optimizer is None:
+            from ase.optimize import BFGS
+            optimizer = BFGS
         self.optimizer = optimizer
         self.fmax = fmax
         self.symprec = symprec
@@ -263,12 +275,12 @@ class ElasticASE:
         """Progress message: to the "elastic_ase" logger, and printed when verbose."""
         logger.info(message)
         if self.verbose:
-            print(message)
+            report.say(message)
 
     def _warn(self, message):
         warnings.warn(message)
         if self.verbose:
-            print(f"  [Warning] {message}")
+            report.say(f"  [Warning] {message}")
 
     @property
     def code(self):
@@ -313,7 +325,7 @@ class ElasticASE:
                 out.append((strained_key(deformation.folder, float(s)), strained))
         return out
 
-    def _print_header(self):
+    def _print_header(self, external=False):
         self._say("=" * 70)
         self._say(f" ElasticASE: Elastic Constants Calculation ({self.symmetry.upper()})")
         self._say("=" * 70)
@@ -321,6 +333,8 @@ class ElasticASE:
         self._say(f"Strain values          : {self.strains.tolist()}")
         self._say(f"Deformation modes      : {len(self.crystal_system.deformations)}")
         self._say(f"Calculations           : {len(self.runs())} (including the unstrained cell)")
+        if not external:
+            self._say(f"Atom relaxation        : {self._relaxation_text()}")
         self._say("-" * 70)
 
     # -------------------------------------------------------------- run state
@@ -369,12 +383,25 @@ class ElasticASE:
     def _energy(self, atoms, key, calc):
         """Energy of one run with the attached calculator; raises on failure or no convergence."""
         atoms.calc = calc
-        if self.optimizer is not None and key != GROUND_STATE:
+        if self.relaxes_atoms and key != GROUND_STATE:
             self.optimizer(atoms, logfile=None).run(fmax=self.fmax)
         energy = float(atoms.get_potential_energy())
         if getattr(calc, "converged", None) is False:
             raise RuntimeError("calculator reports converged = False (unconverged SCF)")
         return energy
+
+    @property
+    def relaxes_atoms(self):
+        """True when the atoms are relaxed inside the strained cells (relaxation=True and more
+        than one atom)."""
+        return self.relaxation and len(self.atoms) > 1
+
+    def _relaxation_text(self):
+        if len(self.atoms) == 1:
+            return "not needed (1 atom)"
+        if not self.relaxation:
+            return "off (clamped-ion constants)"
+        return f"on ({self.optimizer.__name__}, fmax = {self.fmax:g} eV/Å; relaxed-ion constants)"
 
     def _calculator(self):
         calc = self.atoms.calc
@@ -530,9 +557,9 @@ class ElasticASE:
         self._say(f"[ElasticASE] Wrote {what} for {len(folders)} calculations to {workdir}")
         for note in plan.notes:
             self._say(f"[ElasticASE] Note: {note}")
-        if self.optimizer is not None:
-            self._say("[ElasticASE] Note: relax the atoms inside the fixed strained cells in your own "
-                      "calculations (e.g. VASP ISIF = 2); the optimizer is not used here.")
+        if self.relaxes_atoms:
+            self._say("[ElasticASE] Note: for relaxed-ion constants, relax the atoms inside the fixed "
+                      "strained cells in the code's input (e.g. VASP IBRION = 2, ISIF = 2, NSW > 0).")
         return folders
 
     def run_jobs(self, workdir, command=None, runs=None, code=None, filename=None):
@@ -598,7 +625,7 @@ class ElasticASE:
         write_inputs(..., runs=...) to resubmit them.
         """
         filename = self._output_name(filename, code) or "OUTCAR"
-        self._print_header()
+        self._print_header(external=True)
         energies, problems = rundir.read_outputs(workdir, self.runs(), filename, self._code_for(code))
         if problems:
             lines = "\n".join(f"  {k}: {v}" for k, v in problems.items())
@@ -648,11 +675,11 @@ class ElasticASE:
         self.results = results
         self.directional_analysis()  # fills results.directional_properties (needs elastic-vis)
         if self.verbose:
-            print(report.format_report(results, self.frame, f"{self.space_group_symbol} (#{self.space_group_number})"))
+            report.say(report.format_report(results, self.frame, f"{self.space_group_symbol} (#{self.space_group_number})"))
         return results
 
     def _print_report(self):
-        print(report.format_report(self.results, self.frame, f"{self.space_group_symbol} (#{self.space_group_number})"))
+        report.say(report.format_report(self.results, self.frame, f"{self.space_group_symbol} (#{self.space_group_number})"))
 
     def _require_results(self):
         if self.results is None:
@@ -723,6 +750,7 @@ class ElasticASE:
             "strains": self.strains.tolist(),
             "frame": self.frame,
             "symprec": self.symprec,
+            "relaxation": self.relaxation,
             "energies_eV": r.energies,
             "results": _plain({k: v for k, v in r.items() if k not in ("energies", "fits")}),
         }
@@ -742,7 +770,7 @@ class ElasticASE:
             raise ValueError(f"{filename} is not an elastic_ase results file")
         ec = cls(decode(json.dumps(data["atoms"])), symmetry="auto" if data["auto_oriented"] else data["symmetry"],
                  strains=data["strains"], reorient=False, frame=data["frame"], symprec=data["symprec"],
-                 verbose=verbose)
+                 relaxation=data.get("relaxation", True), verbose=verbose)
         ec._analyse({k: float(v) for k, v in data["energies_eV"].items()})
         return ec
 

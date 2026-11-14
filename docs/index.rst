@@ -14,7 +14,7 @@ elastic_ase
      <div class="ev-hero__actions">
        <a class="ev-btn ev-btn--primary" href="quickstart.html">Start here</a>
        <a class="ev-btn" href="installation.html">Install</a>
-       <a class="ev-btn" href="guide/dft.html">VASP / Quantum ESPRESSO</a>
+       <a class="ev-btn" href="examples/step_by_step.html">Examples</a>
      </div>
    </section>
 
@@ -25,14 +25,15 @@ Two ways to run
    :widths: 30 70
    :header-rows: 0
 
-   * - **Fast calculators** (tested with EMT, EAM, GRACE and MACE; other ML potentials
-       should work the same way)
-     - ``ElasticConstants(atoms).calculate()`` – everything in memory.
+   * - **Any ASE calculator**
+       (EMT, EAM, machine-learning potentials, GPAW, …)
+     - ``ElasticConstants(atoms).calculate()`` – everything in memory, in one call.
        See :doc:`quickstart` and :doc:`guide/calculators`.
-   * - **DFT codes** (VASP; Quantum ESPRESSO not yet tested with a real run)
-     - ``ElasticConstants(atoms, code="vasp")`` writes one folder per calculation, runs or lets
-       you submit them, tracks which are done / failed / pending and reads the outputs back.
-       See :doc:`guide/dft`.
+   * - **DFT run folders**
+       (VASP, Quantum ESPRESSO)
+     - ``ElasticConstants(atoms, code="vasp")`` writes one folder per calculation, runs them or
+       lets you submit them, tracks which are done / failed / pending and reads the outputs
+       back. See :doc:`guide/dft`.
 
 Both give the same results: stiffness matrix, independent constants, Born stability,
 Voigt–Reuss–Hill averages, sound velocities, Debye temperature and more
@@ -51,16 +52,19 @@ What elastic_ase checks for you
   outputs are listed and can be repeated alone.
 * **The curves** – ``plot_fits()`` shows every energy–strain curve with its fit.
 
-What has and has not been tested is listed in :doc:`testing`.
-
 Where to go
 -----------
 
-* **New here?** :doc:`installation`, then the :doc:`quickstart`.
-* **DFT?** :doc:`guide/dft` – VASP and Quantum ESPRESSO, on your machine or on a cluster.
+* **New here?** :doc:`installation`, the :doc:`quickstart`, then a complete calculation
+  :doc:`step by step <examples/step_by_step>`.
+* **Your crystal?** :doc:`examples/laue` – one worked example for each of the 11 Laue groups:
+  the method elastic_ase uses and the result.
+* **Your calculator?** :doc:`examples/calculators` (EAM, GRACE, MACE, GPAW, Quantum ESPRESSO)
+  and :doc:`guide/dft` for VASP and Quantum ESPRESSO run folders.
+* **Before production runs:** :doc:`guide/convergence`.
 * **Something specific?** The :doc:`command line <guide/cli>`, the
   :doc:`Python API <api/index>`, or the :doc:`theory`.
-* **Using it in a paper?** See :doc:`citing`.
+* **How accurate is it?** :doc:`testing`. **Using it in a paper?** :doc:`citing`.
 
 elastic_ase is the ASE counterpart of `elastic_vasp <https://prnvrvs.github.io/elastic_vasp/>`_:
 the same deformation tables and analysis, with energies from an ASE calculator or DFT run folders.
@@ -78,13 +82,21 @@ the same deformation tables and analysis, with energies from an ASE calculator o
    :caption: User guide
    :hidden:
 
+   guide/convergence
    guide/calculators
    guide/dft
-   guide/convergence
    guide/orientation
-   guide/systems
    guide/results
    guide/cli
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
+   :hidden:
+
+   examples/step_by_step
+   examples/laue
+   examples/calculators
 
 .. toctree::
    :maxdepth: 1
@@ -92,7 +104,8 @@ the same deformation tables and analysis, with energies from an ASE calculator o
    :hidden:
 
    theory
+   guide/systems
+   api/index
    testing
    citing
-   api/index
    changelog

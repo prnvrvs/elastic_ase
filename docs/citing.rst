@@ -1,7 +1,7 @@
 Citing
 ======
 
-If elastic_ase is useful for your work, please cite the method papers (the same as for
+If elastic_ase is useful for your work, please cite these papers (the same as for
 `elastic_vasp <https://prnvrvs.github.io/elastic_vasp/>`_, which elastic_ase is based on):
 
 1. P. Kumar and I. Adlakha, "Effect of Interstitial Hydrogen on Elastic Behavior of Metals:
@@ -12,11 +12,6 @@ If elastic_ase is useful for your work, please cite the method papers (the same 
    electrochemical polarization and mechanical behavior in Mg based intermetallics",
    *Computational Materials Science* **214**, 111667, 2022.
    `doi:10.1016/j.commatsci.2022.111667 <https://doi.org/10.1016/j.commatsci.2022.111667>`_
-
-and the software itself, with the version you used:
-
-3. P. Kumar, *elastic_ase: elastic constants from energy–strain calculations with ASE
-   calculators*, version |release|, https://github.com/prnvrvs/elastic_ase.
 
 BibTeX
 ------
@@ -47,16 +42,6 @@ BibTeX
      doi     = {10.1016/j.commatsci.2022.111667},
    }
 
-   @software{elastic_ase,
-     author  = {Kumar, Pranav},
-     title   = {{elastic\_ase: elastic constants from energy-strain
-                 calculations with ASE calculators}},
-     url     = {https://github.com/prnvrvs/elastic_ase},
-     version = {0.0.2},
-     year    = {2026},
-   }
-
-Change ``version`` to the version you used (``elastic_ase.__version__``).
 
 Software elastic_ase relies on
 ------------------------------

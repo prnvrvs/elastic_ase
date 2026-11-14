@@ -78,9 +78,23 @@ def parse_args(args=None):
         "--no-reorient",
         dest="reorient",
         action="store_false",
-        default=True,
+        default=argparse.SUPPRESS,
         help="Keep the structure in its given orientation (default: rotate it rigidly into the "
              "standard setting; cell and atoms are never changed)."
+    )
+    parser.add_argument(
+        "--no-relaxation",
+        dest="relaxation",
+        action="store_false",
+        default=argparse.SUPPRESS,
+        help="Keep the atoms at their scaled positions in the strained cells (clamped-ion "
+             "constants). Default: relax them (relaxed-ion constants)."
+    )
+    parser.add_argument(
+        "--fmax",
+        type=float,
+        default=1e-3,
+        help="Force criterion (eV/Å) of the atom relaxation in the strained cells."
     )
     parser.add_argument(
         "-q", "--quiet",
@@ -166,7 +180,9 @@ def main(args=None):
         atoms,
         symmetry=parsed.symmetry,
         strains=strain_list,
-        reorient=parsed.reorient,
+        reorient=getattr(parsed, "reorient", True),
+        relaxation=getattr(parsed, "relaxation", True),
+        fmax=parsed.fmax,
         frame=parsed.frame,
         verbose=not parsed.quiet
     )

@@ -2,6 +2,14 @@
 import numpy as np
 
 
+def say(*args, **kwargs):
+    """print() on the first MPI process only: a calculator running in parallel (GPAW,
+    ASE with MPI) runs the same script on every process, and the report should appear once."""
+    from ase.parallel import world
+    if world.rank == 0:
+        print(*args, **kwargs)
+
+
 def format_matrix(matrix, decimals=2):
     """6x6 matrix as text with C1..C6 row and column labels."""
     labels = [f"C{i}" for i in range(1, 7)]

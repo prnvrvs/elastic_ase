@@ -1,0 +1,21 @@
+Space group:        P2_1/c (14) – monoclinic (Laue class 2/m), spglib symprec = 0.001 A
+Elastic constants:  13 independent (C11, C12, C13, C15, C22, C23, C25, C33, C35, C44, C46, C55, C66 in this orientation)
+Recommended:        symmetry='monoclinic'  – works in this orientation
+
+[ElasticASE] Auto-detected crystal symmetry: 'monoclinic'
+Calculations           : 53 (including the unstrained cell)
+Atom relaxation        : on (BFGS, fmax = 0.0001 eV/Å; relaxed-ion constants)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  297.07  152.38  107.43    0.00   38.59    0.00
+C2  152.38  347.67  141.98    0.00   -8.34    0.00
+C3  107.43  141.98  266.08    0.00   -0.75    0.00
+C4    0.00    0.00    0.00   72.46    0.00   -8.74
+C5   38.59   -8.34   -0.75    0.00   80.97    0.00
+C6    0.00    0.00    0.00   -8.74    0.00  110.23
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :   186.68 GPa  (Voigt: 190.49, Reuss: 182.88)
+Shear Modulus G_VRH  :    83.66 GPa  (Voigt: 86.67, Reuss: 80.65)
+Residual pressure    :    +0.00 GPa  (from the fits; should be ~0)

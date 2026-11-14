@@ -1,0 +1,21 @@
+Space group:        P4_2/mnm (136) – tetragonal I (Laue class 4/mmm), spglib symprec = 0.001 A
+Elastic constants:  6 independent (C11, C12, C13, C33, C44, C66 in this orientation)
+Recommended:        symmetry='tetragonal_1'  – works in this orientation
+
+[ElasticASE] Auto-detected crystal symmetry: 'tetragonal_1'
+Calculations           : 25 (including the unstrained cell)
+Atom relaxation        : on (BFGS, fmax = 0.0001 eV/Å; relaxed-ion constants)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  262.04  170.57  144.07    0.00    0.00    0.00
+C2  170.57  262.04  144.07    0.00    0.00    0.00
+C3  144.07  144.07  460.32    0.00    0.00    0.00
+C4    0.00    0.00    0.00  103.49    0.00    0.00
+C5    0.00    0.00    0.00    0.00  103.49    0.00
+C6    0.00    0.00    0.00    0.00    0.00  210.17
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :   207.09 GPa  (Voigt: 211.31, Reuss: 202.87)
+Shear Modulus G_VRH  :   105.54 GPa  (Voigt: 118.48, Reuss: 92.61)
+Residual pressure    :    -0.00 GPa  (from the fits; should be ~0)

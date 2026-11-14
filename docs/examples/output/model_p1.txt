@@ -1,0 +1,21 @@
+Space group:        P-1 (2) – triclinic (Laue class -1), spglib symprec = 0.001 A
+Elastic constants:  21 independent (C11, C12, C13, C14, C15, C16, C22, C23, C24, C25, C26, C33, C34, C35, C36, C44, C45, C46, C55, C56, C66 in this orientation)
+Recommended:        symmetry='triclinic'  – works in this orientation
+
+[ElasticASE] Auto-detected crystal symmetry: 'triclinic'
+Calculations           : 85 (including the unstrained cell)
+Atom relaxation        : off (clamped-ion constants)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  193.64  101.56   76.81    8.90   -0.36    1.75
+C2  101.56  150.87  103.11    2.36  -12.34   10.94
+C3   76.81  103.11  182.86   11.99    5.73   -1.27
+C4    8.90    2.36   11.99   55.93    0.66  -12.05
+C5   -0.36  -12.34    5.73    0.66   23.21    0.93
+C6    1.75   10.94   -1.27  -12.05    0.93   44.08
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :   119.86 GPa  (Voigt: 121.15, Reuss: 118.57)
+Shear Modulus G_VRH  :    36.17 GPa  (Voigt: 41.04, Reuss: 31.31)
+Residual pressure    :    +0.00 GPa  (from the fits; should be ~0)

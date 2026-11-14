@@ -29,8 +29,7 @@ Options
      - Space group, independent constants and which tables fit; no calculation.
    * - ``-c``, ``--calculator``
      - ``emt`` (default), ``grace``, or ``module:function`` – a function (or class) called without
-       arguments that returns an ASE calculator, e.g. ``ase.calculators.emt:EMT``. Tested with
-       EMT only.
+       arguments that returns an ASE calculator, e.g. ``ase.calculators.emt:EMT``.
    * - ``-m``, ``--model``
      - GRACE model name (default ``GRACE-2L-OAM``).
    * - ``-s``, ``--symmetry``
@@ -41,6 +40,11 @@ Options
      - ``cartesian`` (default) or ``standard`` (:doc:`orientation`).
    * - ``--no-reorient``
      - Keep the structure in its given orientation.
+   * - ``--no-relaxation``
+     - Keep the atoms at their scaled positions in the strained cells (clamped-ion
+       constants); default: relax them.
+   * - ``--fmax``
+     - Force criterion of that relaxation in eV/Å (default ``1e-3``).
    * - ``-o``, ``--output``
      - Save the results: ``.json`` (everything), ``.csv`` (one row of moduli and
        :math:`C_{ij}`) or any other extension (plain 6×6 matrix).

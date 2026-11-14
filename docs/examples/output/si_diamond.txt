@@ -1,0 +1,21 @@
+Space group:        Fd-3m (227) – cubic (Laue class m-3m), spglib symprec = 0.001 A
+Elastic constants:  3 independent (C11, C12, C44 in this orientation)
+Recommended:        symmetry='cubic'  – works in this orientation
+
+[ElasticASE] Auto-detected crystal symmetry: 'cubic'
+Calculations           : 13 (including the unstrained cell)
+Atom relaxation        : on (BFGS, fmax = 0.0001 eV/Å; relaxed-ion constants)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  142.76   67.70   67.70    0.00    0.00    0.00
+C2   67.70  142.76   67.70    0.00    0.00    0.00
+C3   67.70   67.70  142.76    0.00    0.00    0.00
+C4    0.00    0.00    0.00   76.24    0.00    0.00
+C5    0.00    0.00    0.00    0.00   76.24    0.00
+C6    0.00    0.00    0.00    0.00    0.00   76.24
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :    92.72 GPa  (Voigt: 92.72, Reuss: 92.72)
+Shear Modulus G_VRH  :    57.36 GPa  (Voigt: 60.75, Reuss: 53.97)
+Residual pressure    :    +0.00 GPa  (from the fits; should be ~0)

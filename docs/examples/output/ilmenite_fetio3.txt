@@ -1,0 +1,21 @@
+Space group:        R-3 (148) – trigonal II (Laue class -3), spglib symprec = 0.001 A
+Elastic constants:  7 independent (C11, C12, C13, C14, C15, C33, C44 in this orientation)
+Recommended:        symmetry='trigonal_2'  – works in this orientation
+
+[ElasticASE] Auto-detected crystal symmetry: 'trigonal_2'
+Calculations           : 29 (including the unstrained cell)
+Atom relaxation        : on (BFGS, fmax = 0.0001 eV/Å; relaxed-ion constants)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  258.42  155.19  104.54   14.81    6.17    0.00
+C2  155.19  258.42  104.54  -14.81   -6.17    0.00
+C3  104.54  104.54  191.39    0.00    0.00    0.00
+C4   14.81  -14.81    0.00    5.68    0.00   -6.17
+C5    6.17   -6.17    0.00    0.00    5.68   14.81
+C6    0.00    0.00    0.00   -6.17   14.81   51.62
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :   155.57 GPa  (Voigt: 159.64, Reuss: 151.50)
+Shear Modulus G_VRH  :    18.55 GPa  (Voigt: 35.53, Reuss: 1.57)
+Residual pressure    :    +0.00 GPa  (from the fits; should be ~0)

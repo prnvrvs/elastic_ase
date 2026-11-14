@@ -14,6 +14,7 @@ import numpy as np
 from ase import Atoms
 
 from elastic_ase import auto, orientation, _spglib
+from elastic_ase.report import say
 from elastic_ase.systems import SYSTEMS
 
 # (last space group, crystal system, Laue class, named workflow)
@@ -150,5 +151,5 @@ def check_symmetry(structure, symprec=auto.SYMPREC, verbose=True):
     )
 
     if verbose:
-        print(report.summary())
+        say(report.summary())
     return report

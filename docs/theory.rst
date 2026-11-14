@@ -47,8 +47,9 @@ With the lattice vectors as rows of :math:`L`, the deformed lattice is :math:`L'
    \end{pmatrix},
 
 the symmetric strain tensor built from the Voigt strain. The atoms keep their fractional
-coordinates, so they move with the cell; with ``optimizer=`` (or ``ISIF = 2`` in VASP) they are
-then relaxed inside the fixed strained cell.
+coordinates, so they move with the cell; with ``relaxation=True`` (the default; ``ISIF = 2`` in
+VASP run folders) they are then relaxed inside the fixed strained cell, which gives the
+relaxed-ion constants. ``relaxation=False`` gives the clamped-ion constants.
 
 Volume-conserving corrections
 -----------------------------

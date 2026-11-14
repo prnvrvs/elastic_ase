@@ -83,8 +83,7 @@ another orientation:
    Orientation-aware mode: the symmetry-allowed stiffness matrices are derived from the
    crystal's rotations in its own orientation (a basis of the space of matrices with
    :math:`M C M^\mathsf{T} = C` for every point-group operation), and a minimal set of
-   well-conditioned deformations is chosen for them. Works in any orientation (tested on
-   randomly rotated structures of every crystal family).
+   well-conditioned deformations is chosen for them. Works in any orientation.
 
 Output frame
 ------------

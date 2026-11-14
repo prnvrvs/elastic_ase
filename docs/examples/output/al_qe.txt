@@ -1,0 +1,16 @@
+[ElasticASE] Auto-detected crystal symmetry: 'cubic'
+Calculations           : 13 (including the unstrained cell)
+
+6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
+        C1      C2      C3      C4      C5      C6
+C1  100.01   68.47   68.47    0.00    0.00    0.00
+C2   68.47  100.01   68.47    0.00    0.00    0.00
+C3   68.47   68.47  100.01    0.00    0.00    0.00
+C4    0.00    0.00    0.00   24.19    0.00    0.00
+C5    0.00    0.00    0.00    0.00   24.19    0.00
+C6    0.00    0.00    0.00    0.00    0.00   24.19
+
+Status   : MECHANICALLY STABLE
+Bulk Modulus K_VRH   :    78.99 GPa  (Voigt: 78.99, Reuss: 78.99)
+Shear Modulus G_VRH  :    20.38 GPa  (Voigt: 20.82, Reuss: 19.93)
+Residual pressure    :    +0.10 GPa  (from the fits; should be ~0)

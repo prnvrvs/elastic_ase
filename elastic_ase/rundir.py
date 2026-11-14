@@ -90,6 +90,12 @@ def read_outputs(workdir, runs, filename, code=None):
         if not os.path.exists(path):
             problems[key] = "missing " + filename
             continue
+        # The convergence check reads the text itself, so it also names an unconverged run whose
+        # output ASE cannot parse (pw.x stopped after "convergence NOT achieved").
+        reason = codes.not_converged(path, code)
+        if reason:
+            problems[key] = reason
+            continue
         try:
             result = ase_read(path, index=-1)
             energy = result.get_potential_energy()
@@ -99,10 +105,6 @@ def read_outputs(workdir, runs, filename, code=None):
         if len(result) != len(expected) or not same_cell(result.get_cell(), expected.get_cell()):
             problems[key] = (f"{filename} holds a different cell than this run expects "
                              "(another structure, strain set or orientation?)")
-            continue
-        reason = codes.not_converged(path, code)
-        if reason:
-            problems[key] = reason
             continue
         energies[key] = float(energy)
     return energies, problems
@@ -130,8 +132,26 @@ def status(workdir, runs, filename=None, code=None):
 
 
 def set_directory(calc, path):
-    """Point a file-based calculator at another run folder, keeping its type (str or Path)."""
+    """Point a file-based calculator at another run folder, keeping its type (str or Path).
+
+    The calculation then runs inside that folder, so a relative pseudopotential folder
+    (Quantum ESPRESSO ``pseudo_dir``) is made absolute first: relative to where you started,
+    not to the run folder."""
+    _absolute_pseudo_dir(calc)
     calc.directory = Path(path) if isinstance(calc.directory, Path) else str(path)
+
+
+def _absolute_pseudo_dir(calc):
+    profile = getattr(calc, "profile", None)
+    pseudo = getattr(profile, "pseudo_dir", None)
+    if pseudo and not os.path.isabs(str(pseudo)):
+        profile.pseudo_dir = os.path.abspath(str(pseudo))
+    try:
+        control = calc.parameters["input_data"]["control"]
+    except (AttributeError, KeyError, TypeError):
+        return
+    if control.get("pseudo_dir") and not os.path.isabs(str(control["pseudo_dir"])):
+        control["pseudo_dir"] = os.path.abspath(str(control["pseudo_dir"]))
 
 
 def write_calculator_input(calc, atoms):

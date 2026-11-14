@@ -1,6 +1,30 @@
 Changelog
 =========
 
+0.0.3
+-----
+
+* New: ``relaxation=True`` (the default) relaxes the atom positions inside every strained cell
+  with BFGS, giving the relaxed-ion constants; ``relaxation=False`` keeps them fixed
+  (clamped-ion). Before, the atoms were relaxed only when an ``optimizer`` was passed, so
+  multi-atom cells gave clamped-ion constants by default. ``optimizer=`` still chooses the
+  optimizer. 1-atom cells are not affected. The report shows the setting ("Atom relaxation");
+  the command line has ``--no-relaxation`` and ``--fmax``.
+* Fixed: an unconverged Quantum ESPRESSO run whose output ASE cannot read was reported with
+  ASE's read error; it is now reported as "SCF not converged" (the convergence check runs
+  before reading). Found with a real pw.x run.
+* Fixed: a relative Quantum ESPRESSO ``pseudo_dir`` (e.g. ``"pseudo"``) was looked up inside
+  every run folder, so pw.x could not find the pseudopotentials; it is now taken relative to
+  the folder you start from.
+* Under MPI (e.g. GPAW with ``mpiexec``) the report is printed once, not by every process.
+* ``independent_constants``, ``standard_constants`` and ``polycrystalline_averages`` hold plain
+  Python floats, so printing them shows ``{'C11': 53.2, ...}`` instead of ``np.float64(...)``.
+* Documentation reorganised around examples: a complete calculation step by step
+  (:doc:`examples/step_by_step`), one example for each of the 11 Laue groups
+  (:doc:`examples/laue`) and one for each calculator, including GPAW and Quantum ESPRESSO
+  (:doc:`examples/calculators`). The "What is tested" page is replaced by :doc:`testing`
+  (comparison with the stress–strain method, published potentials and experiment).
+
 0.0.2
 -----
 

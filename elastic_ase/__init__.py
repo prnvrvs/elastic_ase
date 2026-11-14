@@ -1,4 +1,4 @@
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 from elastic_ase.calculator import ElasticASE
 from elastic_ase.properties import derived_properties

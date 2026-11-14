@@ -1,9 +1,8 @@
 Fast calculators (in memory)
 ============================
 
-With a calculator that returns an energy quickly – EMT, a classical potential, a
-machine-learning potential – everything runs in one call (tested with EMT, EAM, GRACE,
-MACE and GPAW; see :doc:`../testing`):
+With any ASE calculator – EMT, a classical potential, a machine-learning potential, a DFT
+code driven through ASE – everything runs in one call:
 
 .. code-block:: python
 
@@ -33,6 +32,9 @@ own size. elastic_ase estimates the residual pressure from the fits and warns ab
 
    BFGS(FrechetCellFilter(atoms)).run(fmax=1e-4)
 
+Worked examples: :doc:`../examples/step_by_step`, one for every crystal symmetry in
+:doc:`../examples/laue`, and one for each calculator in :doc:`../examples/calculators`.
+
 Options
 -------
 
@@ -51,9 +53,16 @@ Options
      - Strain values :math:`\delta` (at least 3 different ones; default
        ``[-0.01, -0.005, 0, 0.005, 0.01]``). Use values symmetric around zero; ±0.5–1 % is a
        good range for most solids, larger strains bring in anharmonic terms.
+   * - ``relaxation``
+     - ``True`` (default): relax the atoms inside every strained cell – *relaxed-ion*
+       constants, the ones to compare with experiment. The atoms of a multi-atom cell move
+       when the cell is strained, also in diamond Si or hcp metals under shear.
+       ``False``: keep them at their scaled positions – *clamped-ion* constants. A 1-atom
+       cell is never relaxed (nothing to relax). The calculator must return forces;
+       constraints such as ``FixAtoms`` are respected.
    * - ``optimizer``, ``fmax``
-     - An ASE optimizer class (e.g. ``BFGS``) to relax the atoms inside every strained cell
-       (needed when atoms are not fixed by symmetry, e.g. most multi-atom cells).
+     - The ASE optimizer class of that relaxation (default ``BFGS``) and its force
+       criterion in eV/Å (default ``1e-3``; ``1e-4`` for accurate constants).
    * - ``reorient``
      - ``True`` (default): rotate the structure rigidly into the standard setting.
        ``False``: keep it as given (see :doc:`orientation`).
@@ -83,8 +92,7 @@ For slower calculators, or to keep every energy:
 
 * each energy is saved to ``runs/energies.json`` as soon as it is computed;
 * a file-based calculator (one with a ``directory``) runs every calculation in its own folder
-  ``runs/<deformation>/strain_<value>/`` (tested with ASE's ``Vasp`` running real VASP; not yet
-  with ``Espresso``);
+  ``runs/<deformation>/strain_<value>/`` (for example ASE's ``Vasp`` or ``Espresso``);
 * a run that raises an error, or whose calculator reports ``converged = False``, is recorded
   in ``runs/failed.json``; the other runs still go ahead and a ``RuntimeError`` at the end
   lists the failures;

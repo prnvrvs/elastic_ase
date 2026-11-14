@@ -8,13 +8,6 @@ by the DFT code (by ``run_jobs`` or by your own job scripts), and read back by e
 Tell ``ElasticConstants`` once which code you use; every later step then knows what to write,
 which output file to read and check, and which command to run.
 
-.. note::
-
-   Tested with real VASP on 1-atom fcc Al: ``write_inputs``, ``run_jobs``,
-   ``read_results``, failed and unconverged runs, resuming, ASE's ``Vasp`` calculator, and
-   reading OUTCARs (which reproduces elastic_vasp). Quantum ESPRESSO input writing and output
-   reading are tested on files only, not yet with a real pw.x run. See :doc:`../testing`.
-
 .. code-block:: python
 
    from ase.io import read
@@ -96,23 +89,28 @@ VASP
       ec.plot_fits("energy_strain.png")
 
 If VASP stops with "I REFUSE TO CONTINUE WITH THIS SICK JOB" because its symmetry analysis
-finds the direct and reciprocal lattices of a strained cell inconsistent – seen for rotated
-cells with ``reorient=False`` – add ``ISYM = 0`` (or change ``SYMPREC``) to the INCAR and
-rerun the failed runs. The default rotation into the standard setting avoids it.
+finds the direct and reciprocal lattices of a strained cell inconsistent – this can happen for
+cells kept in a non-standard orientation (``reorient=False``) – add ``ISYM = 0`` (or change
+``SYMPREC``) to the INCAR and rerun the failed runs. The default rotation into the standard
+setting avoids it.
 
 The POTCAR's element order is checked against the POSCAR, and a structure whose atoms are not
 grouped by element (e.g. Cu Au Cu) is refused, since no POTCAR can match its POSCAR – sort it
 first with ``atoms = atoms[atoms.numbers.argsort(kind="stable")]``.
 
 With an ASE ``Vasp`` calculator attached and no ``files``, ``write_inputs`` writes the complete
-input (INCAR, KPOINTS, POSCAR, POTCAR) from the calculator instead (tested with VASP;
-ASE needs ``VASP_PP_PATH`` pointing to your POTCAR library).
+input (INCAR, KPOINTS, POSCAR, POTCAR) from the calculator instead (ASE needs
+``VASP_PP_PATH`` pointing to your POTCAR library).
 
 Shortcuts with the code fixed: ``vasp_input(workdir, incar=, kpoints=, potcar=)``,
 ``vasp_status(workdir)`` and ``vasp_output(workdir)``.
 
 Quantum ESPRESSO
 ----------------
+
+You need a pw.x executable (for example ``conda install -c conda-forge qe``) and the
+pseudopotentials, e.g. from the `SSSP library
+<https://www.materialscloud.org/discover/sssp>`_ or pslibrary.
 
 The input is written from an ASE ``Espresso`` calculator, whose pseudopotentials, k-points and
 ``input_data`` are used for every run:
@@ -143,8 +141,9 @@ Other codes
 -----------
 
 For a code without a ``code=`` setting, give the structure format, the extra input files, the
-output file and the command yourself. This has not been tested with any other code yet; it
-relies on ASE writing the structure and reading the energy from the output:
+output file and the command yourself. This works for any code whose structure file ASE can
+write and whose energy ASE can read from the output; there is no code-specific convergence
+check:
 
 .. code-block:: python
 
@@ -207,8 +206,7 @@ Running DFT through ASE directly
 Instead of run folders, an ASE DFT calculator can also be driven by
 ``calculate(workdir=...)`` (:doc:`calculators`): every calculation runs in its own folder
 inside ``workdir`` and every energy is saved as soon as it is computed, so a crashed job
-continues where it stopped. (Tested with ASE's ``Vasp`` running real VASP; not yet with
-``Espresso``.)
+continues where it stopped.
 
 Convergence
 -----------

@@ -15,16 +15,57 @@ The current version from GitHub:
 
    pip install "git+https://github.com/prnvrvs/elastic_ase.git"
 
-Optional: the directional plots and extremes (Young's modulus, shear modulus, Poisson's ratio
-and linear compressibility surfaces) use
-`elastic-vis <https://github.com/prabhat7iitm/elastic-vis>`_. It is not on PyPI, so install it
-separately:
+Optional: directional properties (elastic-vis)
+----------------------------------------------
+
+The directional plots and extremes – Young's modulus, shear modulus, Poisson's ratio and
+linear compressibility as a function of direction – use
+`elastic-vis <https://github.com/prabhat7iitm/elastic-vis>`_. It is not on PyPI, so it cannot
+be installed together with elastic_ase; install it separately:
 
 .. code-block:: bash
 
    pip install "git+https://github.com/prabhat7iitm/elastic-vis.git"
 
-For development – an editable install with the tools to run the tests and build this
+With elastic-vis installed, the report printed by ``calculate()`` ends with one more block
+(here for EMT aluminium):
+
+.. code-block:: text
+
+   ----------------------------------------------------------------------
+    Directional Elastic Extremes & Anisotropy (elastic-vis):
+     Young's Modulus E    : min =    28.21 GPa, max =    83.21 GPa  (Anisotropy: 2.95)
+     Shear Modulus G      : min =    10.21 GPa, max =    36.18 GPa  (Anisotropy: 3.54)
+     Poisson's Ratio nu   : min =   -0.227,     max =    0.756      (Negative nu: YES (auxetic))
+     Linear Compress. LC  : min =     8.42,     max =     8.42 TPa⁻¹ (Negative LC: No)
+
+Without elastic-vis everything else works – the stiffness matrix, independent constants,
+stability, Voigt–Reuss–Hill averages and derived properties. Only these need it:
+
+* ``results.directional_properties`` (``None`` without elastic-vis);
+* ``ec.Young``, ``ec.shear``, ``ec.poisson``, ``ec.linear_compressibility``,
+  ``ec.visualize`` and ``ec.to_elastic_vis`` (:doc:`guide/results`);
+* the ``--plot`` options of the :doc:`command line <guide/cli>`.
+
+Calculators
+-----------
+
+elastic_ase needs only an ASE calculator that returns the energy; install the one you use
+separately. EMT and EAM are built into ASE; machine-learning potentials (GRACE, MACE, …), GPAW,
+VASP and Quantum ESPRESSO are installed on their own (:doc:`examples/calculators`).
+
+Check the installation
+----------------------
+
+.. code-block:: bash
+
+   elastic-ase --help
+   python -c "import elastic_ase; print(elastic_ase.__version__)"
+
+Development
+-----------
+
+An editable install with the tools to run the tests and build this
 documentation:
 
 .. code-block:: bash
@@ -34,18 +75,3 @@ documentation:
    pip install -e ".[test,doc]"
    python -m unittest discover -s tests
    make -C docs html
-
-Calculators
------------
-
-elastic_ase needs only an ASE calculator that returns the energy; install the one you use
-separately. Tested here: EMT and EAM (built into ASE), GRACE, MACE, GPAW and VASP.
-Other machine-learning potentials (CHGNet, …) and ASE calculators should work the same way but
-have not been tested yet (see :doc:`testing`).
-
-Check the installation:
-
-.. code-block:: bash
-
-   elastic-ase --help
-   python -c "import elastic_ase; print(elastic_ase.__version__)"

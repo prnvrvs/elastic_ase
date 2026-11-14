@@ -159,8 +159,45 @@ class TestFeatures(unittest.TestCase):
             self.assertIn("Quantum ESPRESSO", codes.not_converged(bad_qe))
             self.assertIn("VASP", codes.not_converged(bad_vasp))
             self.assertIsNone(codes.not_converged(bad_qe, codes.CODES["vasp"]))  # only the given code's check
+            # an unconverged pw.x output that ASE cannot parse is still named as unconverged
+            from elastic_ase.rundir import read_outputs
+            os.makedirs(os.path.join(tmp, "ground_state"))
+            _write(os.path.join(tmp, "ground_state", "espresso.pwo"),
+                   "Program PWSCF v.7.6 starts\nconvergence NOT achieved after 1 iterations: stopping\n")
+            energies, problems = read_outputs(tmp, [("ground_state", bulk("Al"))], "espresso.pwo",
+                                              codes.CODES["qe"])
+            self.assertEqual(energies, {})
+            self.assertIn("SCF not converged", problems["ground_state"])
         with self.assertRaises(ValueError):  # QE input needs the Espresso calculator
             codes.CODES["qe"].plan(bulk("Al"), None, {})
+
+    def test_relative_pseudo_dir_made_absolute(self):
+        # pw.x runs inside each run folder: a relative pseudo_dir must not be resolved there
+        from ase.calculators.espresso import Espresso, EspressoProfile
+        from elastic_ase.rundir import set_directory
+        calc = Espresso(profile=EspressoProfile(command="pw.x", pseudo_dir="pseudo"),
+                        pseudopotentials={"Al": "Al.UPF"},
+                        input_data={"control": {"pseudo_dir": "pp"}})
+        set_directory(calc, "runs/ground_state")
+        self.assertEqual(calc.profile.pseudo_dir, os.path.abspath("pseudo"))
+        self.assertEqual(calc.parameters["input_data"]["control"]["pseudo_dir"], os.path.abspath("pp"))
+
+    def test_relaxation_default_and_off(self):
+        # 2-atom hcp cell: the atoms move under basal shear (C66 = (C11 - C12)/2), so
+        # relaxed-ion and clamped-ion constants differ
+        def c66(relaxation):
+            atoms = bulk("Cu", "hcp", a=2.54, c=4.15)
+            atoms.calc = EMT()
+            ec = ElasticASE(atoms, verbose=False, relaxation=relaxation, fmax=1e-4)
+            self.assertEqual(ec.relaxes_atoms, relaxation)
+            c = ec.calculate()["standard_constants"]
+            return (c["C11"] - c["C12"]) / 2
+        relaxed, clamped = c66(True), c66(False)
+        self.assertLess(relaxed, clamped - 10.0)  # relaxation lowers the shear stiffness (52 vs 69 GPa)
+        al = ElasticASE(bulk("Al", "fcc", a=A0), verbose=False)  # 1 atom: nothing to relax
+        self.assertTrue(al.relaxation)
+        self.assertFalse(al.relaxes_atoms)
+        self.assertEqual(al.optimizer.__name__, "BFGS")
 
     def test_cli_calculator_option(self):
         from elastic_ase.cli import make_calculator

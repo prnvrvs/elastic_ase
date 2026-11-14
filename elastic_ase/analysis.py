@@ -110,6 +110,10 @@ def analyse(system, strains, energies, atoms, symmetry, standard_rotation=None,
     # usual meaning only with the crystal axes along x, y, z: use the standard setting.
     is_stable, criteria = check_mechanical_stability(c_standard, symmetry)
     averages = calculate_polycrystalline_averages(c_standard)
+    # plain Python numbers, so that printing a dictionary shows {'C11': 53.2, ...}
+    constants = {k: float(v) for k, v in constants.items()}
+    standard_constants = {k: float(v) for k, v in standard_constants.items()}
+    averages = {k: (float(v) if isinstance(v, np.floating) else v) for k, v in averages.items()}
     return ElasticResults(
         stiffness_matrix=c_standard if frame == "standard" else stiffness,
         stiffness_cartesian=stiffness,

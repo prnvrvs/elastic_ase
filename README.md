@@ -65,40 +65,19 @@ results = ec.read_results("runs")
 From the command line: `elastic-ase POSCAR --check` (symmetry only) or
 `elastic-ase POSCAR -c emt -o C.txt`.
 
-The [documentation](https://prnvrvs.github.io/elastic_ase/) covers
-[installation](https://prnvrvs.github.io/elastic_ase/installation.html),
-[fast calculators](https://prnvrvs.github.io/elastic_ase/guide/calculators.html),
-[VASP and Quantum ESPRESSO](https://prnvrvs.github.io/elastic_ase/guide/dft.html),
-[symmetry and orientation](https://prnvrvs.github.io/elastic_ase/guide/orientation.html),
-the [deformation tables](https://prnvrvs.github.io/elastic_ase/guide/systems.html),
-[results and checks](https://prnvrvs.github.io/elastic_ase/guide/results.html),
-the [command line](https://prnvrvs.github.io/elastic_ase/guide/cli.html), the
-[theory](https://prnvrvs.github.io/elastic_ase/theory.html) and the
-[Python API](https://prnvrvs.github.io/elastic_ase/api/index.html).
+The [documentation](https://prnvrvs.github.io/elastic_ase/) has a
+[step-by-step example](https://prnvrvs.github.io/elastic_ase/examples/step_by_step.html),
+[an example for every crystal symmetry](https://prnvrvs.github.io/elastic_ase/examples/laue.html)
+and [for every calculator](https://prnvrvs.github.io/elastic_ase/examples/calculators.html),
+guides to [VASP and Quantum ESPRESSO](https://prnvrvs.github.io/elastic_ase/guide/dft.html),
+[convergence](https://prnvrvs.github.io/elastic_ase/guide/convergence.html),
+[symmetry and orientation](https://prnvrvs.github.io/elastic_ase/guide/orientation.html) and
+[the results](https://prnvrvs.github.io/elastic_ase/guide/results.html), the
+[theory](https://prnvrvs.github.io/elastic_ase/theory.html), the
+[accuracy](https://prnvrvs.github.io/elastic_ase/testing.html) against other methods and
+experiment, and the [Python API](https://prnvrvs.github.io/elastic_ase/api/index.html).
 
-## What is tested
-
-- All tables recover a known stiffness matrix exactly from a synthetic quadratic energy, and
-  they are identical to elastic_vasp's.
-- With EMT: relaxed alloy structures of every crystal family give the same constants from
-  the named table, the full triclinic fit and the automatic mode on randomly rotated copies.
-- VASP: reading 19 real VASP OUTCARs of fcc Al reproduces elastic_vasp's result
-  ($C_{11}$ = 106.6, $C_{12}$ = 63.4, $C_{44}$ = 28.9 GPa).
-- Running VASP through elastic_ase (1-atom Al, small test settings): `write_inputs`,
-  `run_jobs`, `read_results`, crashed and unconverged runs, resuming only the missing runs,
-  and ASE's `Vasp` calculator with `calculate(workdir=...)`.
-- Quantum ESPRESSO: input writing and output reading/convergence checks are tested on files,
-  **not yet with a real pw.x run through elastic_ase**.
-- Against published values: the Al EAM potential of Mishin et al. (1999, from NIST) gives
-  $C_{11}$ = 113.5, $C_{12}$ = 61.3, $C_{44}$ = 31.6 GPa (published 114.0, 61.6, 31.6) at
-  the published lattice constant, from the primitive, conventional and rotated cells alike.
-- GRACE-2L-OAM and MACE (medium-mpa-0) on 1-atom Al, from Python and the command line:
-  $C_{11}$ = 112.8 / 114.8, $C_{12}$ = 60.5 / 64.9, $C_{44}$ = 33.9 / 29.3 GPa. GPAW: the route works, but the tested settings were not converged.
-- **Not tested here:** CHGNet or other ML potentials (they should work like any ASE
-  calculator), other DFT codes, magnetic systems, larger cells with VASP.
-
-Details: [What is tested](https://prnvrvs.github.io/elastic_ase/testing.html). Please report
-problems on the [issue tracker](https://github.com/prnvrvs/elastic_ase/issues).
+Problems and questions: [issue tracker](https://github.com/prnvrvs/elastic_ase/issues).
 
 ## Development
 
