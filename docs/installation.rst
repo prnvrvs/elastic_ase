@@ -3,7 +3,7 @@ Installation
 
 Python 3.10 or newer is required; NumPy, ASE and spglib are installed automatically.
 
-From PyPI (once the first release is published):
+From PyPI:
 
 .. code-block:: bash
 

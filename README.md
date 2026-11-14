@@ -27,7 +27,7 @@ analysis, with the energies from an ASE calculator (run in memory) or from DFT r
 ## Installation
 
 ```bash
-pip install elastic-ase                                          # from PyPI (once the first release is published)
+pip install elastic-ase                                          # from PyPI
 pip install "git+https://github.com/prnvrvs/elastic_ase.git"     # current version from GitHub
 ```
 

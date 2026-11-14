@@ -52,7 +52,7 @@ BibTeX
      title   = {{elastic\_ase: elastic constants from energy-strain
                  calculations with ASE calculators}},
      url     = {https://github.com/prnvrvs/elastic_ase},
-     version = {0.0.1},
+     version = {0.0.2},
      year    = {2026},
    }
 

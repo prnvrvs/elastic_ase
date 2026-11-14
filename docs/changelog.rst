@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+0.0.2
+-----
 
 * Command line: a ``-c module:function`` calculator that needs arguments gives a clear error
   instead of a traceback.
