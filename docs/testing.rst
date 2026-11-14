@@ -159,6 +159,135 @@ physical. The remaining differences come from the different strains of each rout
 anharmonic terms. This run also found that the Laue class reported for space groups 168–176
 (6/m) and 195–206 (m-3) was wrong (fixed; tables and constants were not affected).
 
+**Energy–strain (elastic_ase) against stress–strain (the Materials Project method)**, both with
+GRACE-2L-OAM on the same relaxed structure, atoms relaxed in every strained cell (stress–strain:
+each strain component at ±0.5 and ±1 %, :math:`C_{ij}` from the slope of the stress). Largest
+difference over all entries of C:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 14 12 16 24
+
+   * - Material
+     - Laue
+     - Atoms
+     - Constants
+     - max difference
+   * - Al
+     - m-3m
+     - 1
+     - 3
+     - 0.05 GPa
+   * - NaCl
+     - m-3m
+     - 2
+     - 3
+     - 0.03 GPa
+   * - MgO
+     - m-3m
+     - 2
+     - 3
+     - 0.13 GPa
+   * - Cu
+     - m-3m
+     - 1
+     - 3
+     - 0.10 GPa
+   * - Si
+     - m-3m
+     - 2
+     - 3
+     - 0.41 GPa
+   * - pyrite FeS₂
+     - m-3
+     - 12
+     - 3
+     - 0.95 GPa
+   * - Mg
+     - 6/mmm
+     - 2
+     - 5
+     - 0.05 GPa
+   * - Ti
+     - 6/mmm
+     - 2
+     - 5
+     - 0.37 GPa
+   * - ZnO (wurtzite)
+     - 6/mmm
+     - 4
+     - 5
+     - 0.54 GPa
+   * - rutile TiO₂
+     - 4/mmm
+     - 6
+     - 6
+     - 0.98 GPa
+   * - scheelite CaWO₄
+     - 4/m
+     - 12
+     - 7
+     - 0.15 GPa
+   * - corundum Al₂O₃
+     - -3m
+     - 10
+     - 6
+     - 0.19 GPa
+   * - ilmenite FeTiO₃
+     - -3
+     - 10
+     - 7
+     - 1.21 GPa
+   * - black P
+     - mmm
+     - 4
+     - 9
+     - 0.04 GPa
+   * - ZrO₂ (baddeleyite)
+     - 2/m
+     - 12
+     - 13
+     - 2.07 GPa
+
+The remaining differences (≤ 1 GPa except 2 GPa for one entry of ZrO₂) come from the two
+methods probing anharmonic terms differently at the same strains.
+
+**Against experiment** (same GRACE calculations; GPa; experimental values at room temperature
+from the references given). The differences are those of the potential, which was trained
+on PBE data – PBE typically underestimates the stiffness of Si and MgO – not of elastic_ase:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 43 43
+
+   * - Material
+     - GRACE through elastic_ase
+     - Experiment
+   * - Al
+     - :math:`C_{11}` 112.8, :math:`C_{12}` 60.5, :math:`C_{44}` 33.9
+     - 106.8, 60.7, 28.2 (Kamm & Alers, J. Appl. Phys. 35, 327, 1964)
+   * - Cu
+     - 175.1, 125.3, 76.4
+     - 170.0, 122.5, 75.8 (Chang & Himmel, J. Appl. Phys., 1966)
+   * - Si
+     - 142.8, 67.7, 76.2
+     - 165.7, 63.9, 79.6 (Mason 1958, as compiled in J. Synchrotron Rad. 2014)
+   * - MgO
+     - 258.1, 94.4, 128.3
+     - 297.8, 95–97, 155.8 (inelastic X-ray scattering)
+   * - Mg
+     - :math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}`: 61.9, 27.2, 21.8, 65.8, 18.1
+     - 59.4, 25.6, 21.4, 61.6, 16.4 (Slutsky & Garland, Phys. Rev. 107, 972, 1957)
+   * - Ti
+     - 137.1, 92.8, 79.6, 181.3, 42.5
+     - 162.4, 92.0, 69.0, 180.7, 46.7 (Fisher & Renken, Phys. Rev. 135, A482, 1964)
+   * - rutile
+     - :math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}, C_{66}`: 262.0, 170.6, 144.1, 460.3, 103.5, 210.2
+     - 268, 175, 147, 484, 123.8, 190.2 (Carnes, as quoted in arXiv:2607.08860)
+
+A comparison with the Materials Project's own (PBE, stress–strain) values is not included: it
+needs their API key.
+
 **Other ASE calculators** (1-atom fcc Al, cell relaxed with the same calculator first)
 
 * GRACE-2L-OAM (machine-learning potential): :math:`a_0 = 4.043` Å, :math:`C_{11} = 112.8`,
