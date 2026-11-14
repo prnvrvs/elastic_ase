@@ -29,7 +29,7 @@ Checked
 
 **VASP**
 
-* Reading real VASP 6 OUTCARs: the 19 runs of fcc Al from the
+* Reading real VASP OUTCARs: the 19 runs of fcc Al from the
   `elastic_vasp tutorial <https://prnvrvs.github.io/elastic_vasp/>`_, arranged as elastic_ase
   run folders, give :math:`C_{11} = 106.6`, :math:`C_{12} = 63.4`, :math:`C_{44} = 28.9` GPa,
   as elastic_vasp; a swapped OUTCAR is detected by the cell check.
@@ -39,7 +39,7 @@ Checked
 * The residual pressure from the fits of the real Al runs is 0.01 GPa (the cell is at the
   Birch–Murnaghan minimum).
 
-**Running VASP through elastic_ase** (VASP 6.4.2 on macOS, 1-atom fcc Al, ENCUT 400 eV and a
+**Running VASP through elastic_ase** (on macOS, 1-atom fcc Al, ENCUT 400 eV and a
 7×7×7 k-mesh – deliberately small and *not converged* for Al, so this checks that every route
 works, not the values):
 

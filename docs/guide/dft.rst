@@ -10,7 +10,7 @@ which output file to read and check, and which command to run.
 
 .. note::
 
-   Tested with real VASP 6.4.2 on 1-atom fcc Al: ``write_inputs``, ``run_jobs``,
+   Tested with real VASP on 1-atom fcc Al: ``write_inputs``, ``run_jobs``,
    ``read_results``, failed and unconverged runs, resuming, ASE's ``Vasp`` calculator, and
    reading OUTCARs (which reproduces elastic_vasp). Quantum ESPRESSO input writing and output
    reading are tested on files only, not yet with a real pw.x run. See :doc:`../testing`.
@@ -105,7 +105,7 @@ grouped by element (e.g. Cu Au Cu) is refused, since no POTCAR can match its POS
 first with ``atoms = atoms[atoms.numbers.argsort(kind="stable")]``.
 
 With an ASE ``Vasp`` calculator attached and no ``files``, ``write_inputs`` writes the complete
-input (INCAR, KPOINTS, POSCAR, POTCAR) from the calculator instead (tested with VASP 6.4.2;
+input (INCAR, KPOINTS, POSCAR, POTCAR) from the calculator instead (tested with VASP;
 ASE needs ``VASP_PP_PATH`` pointing to your POTCAR library).
 
 Shortcuts with the code fixed: ``vasp_input(workdir, incar=, kpoints=, potcar=)``,

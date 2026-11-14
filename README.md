@@ -82,9 +82,9 @@ the [command line](https://prnvrvs.github.io/elastic_ase/guide/cli.html), the
   they are identical to elastic_vasp's.
 - With EMT: relaxed alloy structures of every crystal family give the same constants from
   the named table, the full triclinic fit and the automatic mode on randomly rotated copies.
-- VASP: reading 19 real VASP 6 OUTCARs of fcc Al reproduces elastic_vasp's result
+- VASP: reading 19 real VASP OUTCARs of fcc Al reproduces elastic_vasp's result
   ($C_{11}$ = 106.6, $C_{12}$ = 63.4, $C_{44}$ = 28.9 GPa).
-- Running VASP 6.4.2 through elastic_ase (1-atom Al, small test settings): `write_inputs`,
+- Running VASP through elastic_ase (1-atom Al, small test settings): `write_inputs`,
   `run_jobs`, `read_results`, crashed and unconverged runs, resuming only the missing runs,
   and ASE's `Vasp` calculator with `calculate(workdir=...)`.
 - Quantum ESPRESSO: input writing and output reading/convergence checks are tested on files,
