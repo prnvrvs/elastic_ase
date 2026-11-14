@@ -52,7 +52,10 @@ Check a structure without any calculation:
 .. code-block:: python
 
    from elastic_ase import check_symmetry
-   report = check_symmetry("POSCAR")      # space group, constants, which tables fit
+   report = check_symmetry("POSCAR")
+
+The report gives the space group, the independent constants and which tables fit the crystal
+in its orientation.
 
 Orientation
 -----------

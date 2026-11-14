@@ -8,11 +8,11 @@ your control.
 
 .. code-block:: bash
 
-   elastic-ase POSCAR --check                     # symmetry and orientation only
-   elastic-ase POSCAR -c emt                      # EMT
-   elastic-ase structure.cif -c grace -m GRACE-2L-OAM -o results.json
-   elastic-ase structure.cif -c grace -o C.txt    # plain 6x6 matrix
-   elastic-ase structure.cif -c grace --plot --Young --Shear --2D --3D --format pdf
+   elastic-ase POSCAR --check                # symmetry only
+   elastic-ase POSCAR -c emt
+   elastic-ase in.cif -c grace -m GRACE-2L-OAM -o results.json
+   elastic-ase in.cif -c grace -o C.txt      # plain 6x6 matrix
+   elastic-ase in.cif -c grace --plot --Young --Shear --format pdf
 
 The structure can be any file ASE reads (POSCAR, CIF, extended XYZ, …).
 

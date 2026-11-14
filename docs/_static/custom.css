@@ -119,6 +119,14 @@ html[data-theme="dark"] {
     overflow-x: auto;
 }
 
+/* wide display math (e.g. the 6x6 stiffness layouts) scrolls instead of widening the page */
+.bd-content div.math,
+.bd-content mjx-container[display="true"] {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 /* responsive 16:9 video embed */
 .ev-video {
     position: relative;
@@ -137,4 +145,18 @@ html[data-theme="dark"] {
     width: 100%;
     height: 100%;
     border: 0;
+}
+
+/* inline code in headings may wrap on narrow screens */
+.bd-content h1 code, .bd-content h2 code, .bd-content h3 code,
+.bd-content h1 code .pre, .bd-content h2 code .pre, .bd-content h3 code .pre {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* long API signatures (function names, defaults) wrap instead of widening the page */
+.bd-content dt.sig,
+.bd-content dt.sig .pre {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }

@@ -24,7 +24,16 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
 ]
+# links to the documentation of types used in signatures (ase.Atoms, numpy.ndarray, ...)
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "ase": ("https://docs.ase-lib.org", None),
+}
+# numpy-style type phrases that are not objects
+nitpick_ignore = [("py:class", "optional"), ("py:class", "ASE optimizer class")]
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "_generated", "Thumbs.db", ".DS_Store"]  # _generated is included, not a page
 default_role = "code"
@@ -142,14 +151,14 @@ def _generate_system_tables(app):
     for name in order:
         spec = SYSTEMS[name]
         design = spec.design_matrix()
-        title = '{} (``symmetry="{}"``)'.format(titles[name], name)
+        title = titles[name]
         parts += [title, "~" * len(title), "",
-                  "{} independent constants: :math:`{}`".format(
-                      len(spec.constants), r",\ ".join(_cij(c) for c in spec.constants)), ""]
+                  '``symmetry="{}"`` – {} independent constants: :math:`{}`'.format(
+                      name, len(spec.constants), r",\ ".join(_cij(c) for c in spec.constants)), ""]
         if name != "triclinic":  # the triclinic matrix is just all 21 entries
             parts += [".. math::", "", "   C = " + _pattern(spec).replace("\n", "\n   "), ""]
         parts += [".. list-table::", "   :header-rows: 1", "   :widths: 20 48 32", "",
-                  "   * - Folder",
+                  "   * - Run folder",
                   "     - Deformation :math:`F = I + \\varepsilon` applied to the cell",
                   "     - Fitted :math:`a` in :math:`E/V_0 = a\\,\\delta^2`"]
         for k, d in enumerate(spec.deformations):
@@ -164,5 +173,5 @@ def _generate_system_tables(app):
 def setup(app):
     app.connect("builder-inited", _generate_system_tables)
 
-# The ASME DOI is valid but the publisher answers automated requests with 403.
-linkcheck_ignore = [r"https://doi\.org/10\.1115/1\.4055097"]
+# The ASME and APS DOIs are valid but the publishers answer automated requests with 403.
+linkcheck_ignore = [r"https://doi\.org/10\.1115/1\.4055097", r"https://doi\.org/10\.1103/"]  # APS too

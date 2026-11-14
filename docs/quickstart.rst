@@ -1,7 +1,9 @@
 Quick start
 ===========
 
-A complete calculation with ASE's built-in EMT potential takes a few seconds:
+A complete calculation with ASE's built-in EMT potential takes a few seconds. The structure
+must be relaxed with the same calculator – a pre-stressed cell biases the constants – so the
+example uses 3.9943 Å, the EMT equilibrium lattice constant of Al:
 
 .. code-block:: python
 
@@ -9,18 +11,19 @@ A complete calculation with ASE's built-in EMT potential takes a few seconds:
    from ase.calculators.emt import EMT
    from elastic_ase import ElasticConstants
 
-   # The structure must be relaxed with the same calculator: a pre-stressed cell biases the
-   # constants. 3.9943 A is the EMT equilibrium lattice constant of Al.
    atoms = bulk("Al", "fcc", a=3.9943, cubic=True)
    atoms.calc = EMT()
 
-   ec = ElasticConstants(atoms)          # symmetry detected: cubic
+   ec = ElasticConstants(atoms)
    results = ec.calculate()
 
    C = results["stiffness_matrix"]       # 6x6, GPa
-   print(results["independent_constants"])   # {'C11': ..., 'C12': ..., 'C44': ...}
+   print(results["independent_constants"])
    print(results["polycrystalline_averages"]["K_VRH"], "GPa")
    print(results["is_stable"])
+
+``independent_constants`` holds :math:`C_{11}`, :math:`C_{12}` and :math:`C_{44}` – spglib
+found the cubic space group Fm-3m.
 
 ``calculate()`` prints a report: the fitted curvature of every deformation, the stiffness
 matrix, Born stability, Voigt–Reuss–Hill moduli, derived properties (sound velocities, Debye
@@ -51,16 +54,22 @@ settings or a failed calculation.
 Save the results
 ----------------
 
+``save`` keeps the structure, settings, every energy and the results; ``load`` redoes the
+whole analysis from them without running anything; ``export_matrix`` writes the plain 6×6
+matrix (for ``numpy.loadtxt`` or elastic-vis):
+
 .. code-block:: python
 
-   ec.save("al_emt.json")                        # structure, settings, energies, results
-   ec2 = ElasticConstants.load("al_emt.json")    # full analysis again, nothing is run
-   ec.export_matrix("C.txt")                     # plain 6x6 matrix (numpy.loadtxt, elastic-vis)
+   ec.save("al_emt.json")
+   ec2 = ElasticConstants.load("al_emt.json")
+   ec.export_matrix("C.txt")
 
 A machine-learning potential
 ----------------------------
 
-Only the calculator changes (not tested here – GRACE is not installed in our test setup):
+Only the calculator changes (tested with GRACE-2L-OAM on 1-atom Al, see :doc:`testing`).
+Relax the structure – cell and atoms – with the same calculator first (see
+:doc:`guide/calculators`):
 
 .. code-block:: python
 
@@ -68,7 +77,6 @@ Only the calculator changes (not tested here – GRACE is not installed in our t
 
    atoms = bulk("Co", "hcp", a=2.498, c=4.053)
    atoms.calc = grace_fm("GRACE-2L-OAM")
-   # relax first (cell and atoms) with the same calculator, e.g. ase.filters.FrechetCellFilter
    results = ElasticConstants(atoms).calculate()
 
 For multi-atom cells whose atoms move under strain, pass an ASE optimizer:

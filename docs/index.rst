@@ -25,8 +25,8 @@ Two ways to run
    :widths: 30 70
    :header-rows: 0
 
-   * - **Fast calculators** (EMT; ML potentials such as GRACE or MACE should work the same
-       way but are not tested yet)
+   * - **Fast calculators** (tested with EMT and GRACE; other ML potentials should work the
+       same way)
      - ``ElasticConstants(atoms).calculate()`` – everything in memory.
        See :doc:`quickstart` and :doc:`guide/calculators`.
    * - **DFT codes** (VASP; Quantum ESPRESSO not yet tested with a real run)
@@ -60,6 +60,7 @@ Where to go
 * **DFT?** :doc:`guide/dft` – VASP and Quantum ESPRESSO, on your machine or on a cluster.
 * **Something specific?** The :doc:`command line <guide/cli>`, the
   :doc:`Python API <api/index>`, or the :doc:`theory`.
+* **Using it in a paper?** See :doc:`citing`.
 
 elastic_ase is the ASE counterpart of `elastic_vasp <https://prnvrvs.github.io/elastic_vasp/>`_:
 the same deformation tables and analysis, with energies from an ASE calculator or DFT run folders.
@@ -91,5 +92,6 @@ the same deformation tables and analysis, with energies from an ASE calculator o
 
    theory
    testing
+   citing
    api/index
    changelog

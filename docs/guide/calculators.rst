@@ -2,16 +2,19 @@ Fast calculators (in memory)
 ============================
 
 With a calculator that returns an energy quickly – EMT, a classical potential, a
-machine-learning potential – everything runs in one call (tested with EMT; see
-:doc:`../testing`):
+machine-learning potential – everything runs in one call (tested with EMT, GRACE and GPAW;
+see :doc:`../testing`):
 
 .. code-block:: python
 
    from elastic_ase import ElasticConstants
 
    atoms.calc = calc                  # any ASE calculator
-   ec = ElasticConstants(atoms)       # symmetry="auto", strains -1 % ... +1 %
+   ec = ElasticConstants(atoms)
    results = ec.calculate()
+
+The defaults – automatic symmetry, strains from −1 % to +1 % – can be changed with the
+options below.
 
 Before you start
 ----------------
@@ -78,21 +81,23 @@ For slower calculators, or to keep every energy:
 
 * each energy is saved to ``runs/energies.json`` as soon as it is computed;
 * a file-based calculator (one with a ``directory``) runs every calculation in its own folder
-  ``runs/<deformation>/strain_<value>/`` (tested with a stand-in calculator, not yet with
-  ASE's ``Vasp`` or ``Espresso`` running a real code);
+  ``runs/<deformation>/strain_<value>/`` (tested with ASE's ``Vasp`` running real VASP; not yet
+  with ``Espresso``);
 * a run that raises an error, or whose calculator reports ``converged = False``, is recorded
   in ``runs/failed.json``; the other runs still go ahead and a ``RuntimeError`` at the end
   lists the failures;
 * calling ``calculate(workdir="runs")`` again repeats only what is missing.
 
-The individual steps are also available:
+The individual steps are also available. ``status`` returns
+``{"done": [...], "failed": {run: reason}, "pending": [...]}``, ``missing`` the failed and
+pending runs in run order, and ``run_pending`` runs them (or ``runs=[...]`` for chosen ones):
 
 .. code-block:: python
 
-   ec.status("runs")          # {"done": [...], "failed": {run: reason}, "pending": [...]}
-   ec.missing("runs")         # failed + pending, in run order
+   ec.status("runs")
+   ec.missing("runs")
    ec.is_complete("runs")     # True when every run has an energy
-   ec.run_pending("runs")     # run what is missing (or runs=[...] for chosen ones)
+   ec.run_pending("runs")
    ec.calculate(workdir="runs")
 
 Saved energies are only reused for the same structure and strains: each entry stores its cell

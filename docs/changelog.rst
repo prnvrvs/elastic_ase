@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+* Command line: a ``-c module:function`` calculator that needs arguments gives a clear error
+  instead of a traceback.
+* Documentation: shorter README pointing to the docs, new :doc:`citing` page, links to the
+  Python/NumPy/ASE documentation in the API reference, layout fixed for narrow screens, and
+  the :doc:`testing` page extended (real VASP runs, the Mishin 1999 Al EAM potential compared
+  with its published constants, GRACE, GPAW).
+* Docs workflow runs only for pushes to ``main`` (a tag push cancelled the deployment).
+
 0.0.1 (first release)
 ---------------------
 

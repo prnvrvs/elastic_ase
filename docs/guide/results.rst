@@ -106,8 +106,10 @@ Fit quality and plots
 
 .. code-block:: python
 
-   ec.plot_fits("energy_strain.png")      # one panel per deformation, points + fitted parabola
+   ec.plot_fits("energy_strain.png")
    results["r2_scores"]                   # R^2 of every quadratic fit
+
+``plot_fits`` draws one panel per deformation: the points and the fitted parabola.
 
 Look at the curves first: scatter means unconverged settings (often the k-point mesh), a
 single point off the curve a failed or mixed-up run, an asymmetric curve with a poor
@@ -120,7 +122,7 @@ With elastic-vis installed:
 
 .. code-block:: python
 
-   ec.Young(theta, phi)                   # Young's modulus in a direction (GPa)
+   ec.Young(theta, phi)                   # GPa
    ec.shear(theta, phi)                   # min and max shear modulus
    ec.poisson(theta, phi)                 # min and max Poisson's ratio
    ec.linear_compressibility(theta, phi)
@@ -133,10 +135,12 @@ Saving and exporting
 
 .. code-block:: python
 
-   ec.save("al.json")                       # structure, settings, every energy and the results
-   ec = ElasticConstants.load("al.json")    # recomputes everything; nothing is run
-   ec.export_matrix("C.txt")                # plain 6x6 matrix (numpy.loadtxt, elastic-vis)
-   ec.compliance                            # S = C^-1 (1/GPa)
+   ec.save("al.json")
+   ec = ElasticConstants.load("al.json")
+   ec.export_matrix("C.txt")
+   ec.compliance                          # S = C^-1 (1/GPa)
 
-The JSON file keeps every energy, so the analysis can be redone later – for example with a
-newer elastic_ase – without new calculations.
+``save`` stores the structure, settings, every energy and the results in a JSON file, and
+``load`` recomputes everything from it without running anything – for example later with a
+newer elastic_ase. ``export_matrix`` writes the plain 6×6 matrix (for ``numpy.loadtxt`` or
+elastic-vis).

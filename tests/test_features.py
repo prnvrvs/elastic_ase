@@ -170,6 +170,12 @@ class TestFeatures(unittest.TestCase):
             make_calculator("lj")
         with self.assertRaises(ImportError):
             make_calculator("no_such_module:Calc")
+        # a calculator that needs arguments: clean error and exit code 1, no traceback
+        from elastic_ase.cli import main
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "POSCAR")
+            bulk("Al", "fcc", a=A0).write(path, format="vasp")
+            self.assertEqual(main([path, "-q", "-c", "ase.build:bulk"]), 1)
 
     def test_deprecated_helpers_match_tables(self):
         from elastic_ase import SYSTEMS, get_deformation_specs, solve_stiffness

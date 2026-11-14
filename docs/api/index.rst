@@ -1,8 +1,8 @@
 Python API
 ==========
 
-The main entry point is :class:`elastic_ase.ElasticConstants` (the same class as
-:class:`elastic_ase.ElasticASE`); every analysis ends in an
+The main entry point is ``elastic_ase.ElasticConstants``, the same class as
+:class:`elastic_ase.ElasticASE <elastic_ase.calculator.ElasticASE>`; every analysis ends in an
 :class:`~elastic_ase.results.ElasticResults`. The class delegates to small modules that can also
 be used on their own:
 

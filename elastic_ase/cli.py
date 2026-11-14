@@ -153,8 +153,9 @@ def main(args=None):
     # Attach calculator
     try:
         atoms.calc = make_calculator(parsed.calculator, parsed.model)
-    except (ImportError, AttributeError, ValueError) as exc:
-        print(f"Error: cannot create calculator '{parsed.calculator}': {exc}", file=sys.stderr)
+    except (ImportError, AttributeError, ValueError, TypeError) as exc:
+        hint = " (a 'module:function' calculator must work without arguments)" if isinstance(exc, TypeError) else ""
+        print(f"Error: cannot create calculator '{parsed.calculator}': {exc}{hint}", file=sys.stderr)
         return 1
 
     # Parse strains

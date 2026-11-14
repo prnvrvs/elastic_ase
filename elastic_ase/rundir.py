@@ -2,11 +2,12 @@
 
 Layout of a work directory::
 
-    workdir/ground_state/                  unstrained cell
-    workdir/<deformation>/strain_<value>/  one folder per deformation and non-zero strain
-    workdir/energies.json                  energies saved by calculate(workdir=...) / run_pending
-    workdir/failed.json                    reasons of failed runs (live runs)
-    workdir/elastic_ase_runs.json          symmetry, strains and run names (written folders)
+    workdir/
+      ground_state/                 unstrained cell
+      <deformation>/strain_<value>/ one per deformation and strain
+      energies.json                 energies of live runs
+      failed.json                   reasons of failed live runs
+      elastic_ase_runs.json         symmetry, strains, run names
 """
 import json
 import os

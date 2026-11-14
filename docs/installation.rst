@@ -3,10 +3,17 @@ Installation
 
 Python 3.10 or newer is required; NumPy, ASE and spglib are installed automatically.
 
+From PyPI (once the first release is published):
+
 .. code-block:: bash
 
-   pip install elastic-ase                                        # from PyPI (once the first release is published)
-   pip install "git+https://github.com/prnvrvs/elastic_ase.git"   # current version from GitHub
+   pip install elastic-ase
+
+The current version from GitHub:
+
+.. code-block:: bash
+
+   pip install "git+https://github.com/prnvrvs/elastic_ase.git"
 
 Optional: the directional plots and extremes (Young's modulus, shear modulus, Poisson's ratio
 and linear compressibility surfaces) use
@@ -17,22 +24,23 @@ separately:
 
    pip install "git+https://github.com/prabhat7iitm/elastic-vis.git"
 
-For development (editable install with tests and documentation tools):
+For development – an editable install with the tools to run the tests and build this
+documentation:
 
 .. code-block:: bash
 
    git clone https://github.com/prnvrvs/elastic_ase.git
    cd elastic_ase
    pip install -e ".[test,doc]"
-   python -m unittest discover -s tests     # run the tests
-   make -C docs html                        # build this documentation
+   python -m unittest discover -s tests
+   make -C docs html
 
 Calculators
 -----------
 
 elastic_ase needs only an ASE calculator that returns the energy; install the one you use
-separately. Tested here: EMT (built into ASE) and VASP output files. Machine-learning
-potentials (GRACE, MACE, CHGNet, …) and other ASE calculators should work the same way but
+separately. Tested here: EMT and EAM (built into ASE), GRACE, GPAW and VASP. Other
+machine-learning potentials (MACE, CHGNet, …) and ASE calculators should work the same way but
 have not been tested yet (see :doc:`testing`).
 
 Check the installation:

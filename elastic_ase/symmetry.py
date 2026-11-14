@@ -99,7 +99,7 @@ def check_symmetry(structure, symprec=auto.SYMPREC, verbose=True):
 
     Parameters
     ----------
-    structure : Atoms or str or os.PathLike
+    structure : ase.Atoms or str or os.PathLike
         ASE Atoms object or path to structure file (POSCAR, CIF, etc.).
     symprec : float
         spglib tolerance in Angstroms.
