@@ -8,7 +8,7 @@ Changelog
   with BFGS, giving the relaxed-ion constants; ``relaxation=False`` keeps them fixed
   (clamped-ion). Before, the atoms were relaxed only when an ``optimizer`` was passed, so
   multi-atom cells gave clamped-ion constants by default. ``optimizer=`` still chooses the
-  optimizer. 1-atom cells are not affected. The report shows the setting ("Atom relaxation");
+  optimizer. Results of fcc and bcc metals do not change (symmetry keeps their atoms in place). The report shows the setting ("Atom relaxation");
   the command line has ``--no-relaxation`` and ``--fmax``.
 * Fixed: an unconverged QE run whose output ASE cannot read was reported with
   ASE's read error; it is now reported as "SCF not converged" (the convergence check runs

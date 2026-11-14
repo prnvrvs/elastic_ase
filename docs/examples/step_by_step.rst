@@ -72,8 +72,7 @@ cell generally move to new positions (internal relaxation – the oxygen atoms h
 the atoms of diamond Si or hcp Mg under shear). elastic_ase therefore relaxes the atoms inside
 every strained cell (``relaxation=True``, the default; BFGS until the forces are below
 ``fmax``) and gives the *relaxed-ion* constants, the ones that compare with experiment. With
-``relaxation=False`` the atoms keep their scaled positions (*clamped-ion* constants). In a
-1-atom cell (fcc, bcc metals) the forces stay zero under strain, so the relaxation is skipped.
+``relaxation=False`` the atoms keep their scaled positions (*clamped-ion* constants).
 
 Step 4 – Calculate
 ------------------

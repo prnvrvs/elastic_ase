@@ -175,8 +175,7 @@ class ElasticASE:
             Relax the atom positions inside every strained cell (default True). This gives the
             relaxed-ion constants, the ones that compare with experiment. ``False`` keeps the
             atoms at their scaled positions (clamped-ion constants). The relaxation uses
-            forces, so the calculator must provide them. In a 1-atom cell the forces stay zero
-            under strain, so it is skipped. Atoms fixed with ``FixAtoms`` stay in place.
+            forces, so the calculator must provide them. Atoms fixed with ``FixAtoms`` stay in place.
             Applies to calculate() / run_pending(); in DFT run folders set the relaxation in
             the code's own input (e.g. VASP IBRION = 2, ISIF = 2).
         optimizer : ASE optimizer class, optional

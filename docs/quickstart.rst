@@ -37,7 +37,7 @@ Output on the screen
    Strain values          : [-0.01, -0.005, 0.0, 0.005, 0.01]
    Deformation modes      : 3
    Calculations           : 13 (including the unstrained cell)
-   Atom relaxation        : not needed (1 atom)
+   Atom relaxation        : on (BFGS, fmax = 0.001 eV/Å; relaxed-ion constants)
    ----------------------------------------------------------------------
      Mode C11_C12_I          -> Coeff =      20.43 GPa  (R² = 1.000000)
      Mode C11_C12_II         -> Coeff =     178.23 GPa  (R² = 0.999954)

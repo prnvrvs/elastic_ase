@@ -54,21 +54,63 @@ relaxed-ion constants. ``relaxation=False`` gives the clamped-ion constants.
 Volume-conserving corrections
 -----------------------------
 
-Some deformations contain a second-order diagonal term that keeps the cell volume
-:math:`\det F` exactly 1. For opposite normal strains,
+Six deformations get one extra diagonal term of second order in :math:`\delta`, chosen so that
+the cell volume stays exactly the same, :math:`\det F = 1`. The term changes the energy only
+at order :math:`\delta^3` and leaves the curvature :math:`a` unchanged; it removes the effect
+of a small residual pressure :math:`P`, which would otherwise add
+:math:`P\,\Delta V \propto \delta^2` to the curvature. The deformation names are those of
+:doc:`guide/systems`.
+
+**Opposite normal strains in x and y** – ``C11_C12_II`` (hexagonal, tetragonal, trigonal),
+``C11_C22_C12_I`` (orthorhombic, monoclinic):
 
 .. math::
 
    F = \begin{pmatrix} 1+\delta & 0 & 0 \\ 0 & 1-\delta & 0 \\ 0 & 0 & 1+\varepsilon_3 \end{pmatrix},
-   \qquad
-   \det F = 1 \;\Rightarrow\; \varepsilon_3 = \frac{\delta^2}{1-\delta^2},
+   \qquad \varepsilon_3 = \frac{\delta^2}{1-\delta^2}
 
-and for a pure shear :math:`\varepsilon_4 = \delta`,
-:math:`\det F = (1+\varepsilon_1)(1 - \delta^2/4) = 1 \Rightarrow \varepsilon_1 = \delta^2/(4-\delta^2)`.
-The correction is of second order in :math:`\delta`, so it changes the energy only at order
-:math:`\delta^3` and leaves :math:`a` unchanged; it removes the effect of a small residual
-pressure :math:`P`, which would otherwise add :math:`P\,\Delta V \propto \delta^2` to the
-curvature.
+**Opposite normal strains in x and z** – ``C11_C33_C13_I`` (hexagonal, tetragonal,
+orthorhombic, monoclinic), ``C11_C33_C13_II`` (trigonal):
+
+.. math::
+
+   F = \begin{pmatrix} 1+\delta & 0 & 0 \\ 0 & 1+\varepsilon_2 & 0 \\ 0 & 0 & 1-\delta \end{pmatrix},
+   \qquad \varepsilon_2 = \frac{\delta^2}{1-\delta^2}
+
+**Opposite normal strains in y and z** – ``C22_C33_C23_I`` (orthorhombic, monoclinic):
+
+.. math::
+
+   F = \begin{pmatrix} 1+\varepsilon_1 & 0 & 0 \\ 0 & 1+\delta & 0 \\ 0 & 0 & 1-\delta \end{pmatrix},
+   \qquad \varepsilon_1 = \frac{\delta^2}{1-\delta^2}
+
+**Shear in the yz plane**, :math:`\varepsilon_4 = \delta` – ``C44`` (orthorhombic,
+monoclinic):
+
+.. math::
+
+   F = \begin{pmatrix} 1+\varepsilon_1 & 0 & 0 \\ 0 & 1 & \delta/2 \\ 0 & \delta/2 & 1 \end{pmatrix},
+   \qquad \varepsilon_1 = \frac{\delta^2}{4-\delta^2}
+
+**Shear in the xz plane**, :math:`\varepsilon_5 = \delta` – ``C55`` (orthorhombic):
+
+.. math::
+
+   F = \begin{pmatrix} 1 & 0 & \delta/2 \\ 0 & 1+\varepsilon_2 & 0 \\ \delta/2 & 0 & 1 \end{pmatrix},
+   \qquad \varepsilon_2 = \frac{\delta^2}{4-\delta^2}
+
+**Shear in the xy plane**, :math:`\varepsilon_6 = \delta` – ``C66`` (tetragonal,
+orthorhombic):
+
+.. math::
+
+   F = \begin{pmatrix} 1 & \delta/2 & 0 \\ \delta/2 & 1 & 0 \\ 0 & 0 & 1+\varepsilon_3 \end{pmatrix},
+   \qquad \varepsilon_3 = \frac{\delta^2}{4-\delta^2}
+
+In each case :math:`\det F = 1`: for the normal strains
+:math:`(1+\delta)(1-\delta)(1+\varepsilon) = 1`, for the shears
+:math:`(1+\varepsilon)(1-\delta^2/4) = 1`. The other deformations (all of the cubic table,
+for example) have no such term.
 
 Solving for the constants
 -------------------------

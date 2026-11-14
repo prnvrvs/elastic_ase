@@ -111,8 +111,6 @@ Two typical changes:
 
        * The relaxation uses forces, so the calculator must provide them (energy-only
          calculators need ``relaxation=False``).
-       * In a 1-atom cell (fcc, bcc metals) the forces stay zero under strain, so the
-         relaxation is skipped and costs nothing.
        * To keep some atoms in place, fix them with ``atoms.set_constraint(FixAtoms(...))``
          before creating ``ElasticConstants``; the relaxation leaves them where they are.
    * - ``optimizer``
