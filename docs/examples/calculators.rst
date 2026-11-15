@@ -5,7 +5,7 @@ elastic_ase works with any ASE calculator. The examples on this page all compute
 (1-atom cell, cubic, 3 constants from 13 energies), so the calculators can be compared directly.
 Each script has two steps:
 
-* **Step 1: relax** – the structure, with the calculator you use for the elastic constants;
+* **Step 1: relax** the structure with the calculator you use for the elastic constants;
 * **Step 2: elastic constants** – ``ElasticConstants(atoms).calculate()``.
 
 Only the calculator line differs between the scripts. The full script for the EAM potential:
@@ -18,7 +18,7 @@ Only the calculator line differs between the scripts. The full script for the EA
 EAM (classical potential)
 -------------------------
 
-The aluminium potential of Mishin et al. (1999); download ``Al99.eam.alloy`` from the `NIST Interatomic Potentials Repository <https://www.ctcms.nist.gov/potentials/>`_. Its published constants are :math:`C_{11} = 114.0`, :math:`C_{12} = 61.6`, :math:`C_{44} = 31.6` GPa; with smaller strains (``strains=[-0.0025, -0.00125, 0, 0.00125, 0.0025]``) elastic_ase gives 113.5, 61.3 and 31.6 GPa – at the default ±1 % the anharmonic terms of this potential lower :math:`C_{11}` slightly.
+The aluminium potential of Mishin et al. (1999); download ``Al99.eam.alloy`` from the `NIST Interatomic Potentials Repository <https://www.ctcms.nist.gov/potentials/>`_. The constants agree with the published ones (:doc:`../testing`).
 
 **Screen output** (shortened):
 
@@ -104,7 +104,7 @@ Script: :download:`al_mace.py <scripts/al_mace.py>`.
 GPAW (DFT)
 ----------
 
-PBE with plane waves. Metals need dense k-point meshes: for Al the shear constants still change by up to 5 GPa between 28³ and 32³ k-points. Converge the mesh on the elastic constants (:doc:`../guide/convergence`). Run in parallel with ``mpiexec -n 6 python al_gpaw.py``; the report is printed once.
+PBE with plane waves. Metals need dense k-point meshes: converge the mesh on the elastic constants (:doc:`../guide/convergence`). Run in parallel with ``mpiexec -n 6 python al_gpaw.py``; the report is printed once.
 
 The calculator (the rest is as above):
 
@@ -176,12 +176,26 @@ yourself and call ``read_results`` afterwards (:doc:`../guide/dft`).
      - 68.5
      - 24.2
 
+Script: :download:`al_qe.py <scripts/al_qe.py>`.
+
 These settings (12³ k-points, 40 Ry) are a quick start, not converged for Al. Unlike the
-other scripts, this one skips step 1: it starts from the lattice constant 4.04 Å, so a
-residual pressure of 0.1 GPa remains. For real work, relax the cell first with the same
-settings (pw.x ``"calculation": "vc-relax"``) and start from that structure.
-Script: :download:`al_qe.py <scripts/al_qe.py>`. VASP works the same way with ``code="VASP"``
-and your INCAR, KPOINTS and POTCAR (:doc:`../guide/dft`).
+other scripts, this one does not relax the structure: it starts from the lattice constant
+4.04 Å, so a residual pressure of 0.1 GPa remains. For real work, relax the cell first with
+the same settings (pw.x ``"calculation": "vc-relax"``) and start from that structure.
+
+VASP in run folders
+-------------------
+
+The same as QE, with ``code="VASP"``: every run folder gets a POSCAR and copies of your INCAR,
+KPOINTS and POTCAR. The INCAR relaxes the atoms inside each fixed strained cell
+(``IBRION = 2``, ``ISIF = 2``); see :doc:`../guide/dft` for the settings.
+
+.. literalinclude:: scripts/al_vasp.py
+   :language: python
+   :start-at: from ase.build import bulk
+
+Not run with VASP for this documentation, so no output or result is shown.
+Script: :download:`al_vasp.py <scripts/al_vasp.py>`.
 
 Comparison
 ----------
@@ -210,7 +224,7 @@ Comparison
      - 118.8
      - 57.8
      - 33.9
-   * - QE, PBE, 12³ k-points
+   * - QE, PBE, 12³ k-points (quick start, not converged)
      - 100.0
      - 68.5
      - 24.2

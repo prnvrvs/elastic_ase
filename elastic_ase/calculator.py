@@ -34,7 +34,7 @@ DEFAULT_STRAINS = (-0.01, -0.005, 0.0, 0.005, 0.01)
 def auto_detect_symmetry(atoms: Atoms, symprec: float = 1e-3) -> str:
     """
     Auto-detect crystal symmetry family using spglib.
-    Returns named workflow string ('cubic', 'hexagonal', 'trigonal_2', etc.).
+    Returns the named table ('cubic', 'hexagonal', 'trigonal_2', etc.).
     Falls back to 'triclinic' (all 21 constants, valid for any crystal) if spglib fails.
     """
     cell_data = (np.asarray(atoms.get_cell(), float), atoms.get_scaled_positions(), atoms.numbers)
@@ -42,7 +42,7 @@ def auto_detect_symmetry(atoms: Atoms, symprec: float = 1e-3) -> str:
     if dataset is None:
         warnings.warn(
             f"spglib could not determine the symmetry (symprec={symprec}); using the triclinic "
-            "workflow (21 constants), which is valid for any crystal."
+            "table (21 constants), which is valid for any crystal."
         )
         return "triclinic"
 
@@ -69,7 +69,7 @@ def auto_detect_symmetry(atoms: Atoms, symprec: float = 1e-3) -> str:
 
 def validate_orientation(atoms: Atoms, symmetry: str, verbose: bool = True, symprec: float = 1e-3):
     """
-    Check that the named workflow can measure this crystal in its current orientation.
+    Check that the named table can measure this crystal in its current orientation.
 
     The named tables assume the crystal axes along fixed Cartesian directions (e.g. cubic axes
     along x, y, z; the 3-, 4- or 6-fold axis along z; the monoclinic unique axis along y). The check
@@ -88,8 +88,8 @@ def validate_orientation(atoms: Atoms, symmetry: str, verbose: bool = True, symp
 
     message = (
         f"The '{sym}' deformations cannot measure this crystal in its current orientation "
-        f"(its symmetry allows {len(basis)} independent constants that the '{sym}' table does not "
-        "cover), so the constants would be wrong. Use the default reorient=True, or symmetry='auto' "
+        f"(its symmetry allows {len(basis)} independent constants here, and the '{sym}' table cannot "
+        "represent all of them), so the constants would be wrong. Use the default reorient=True, or symmetry='auto' "
         "(works in any orientation), or rotate the structure into the standard setting."
     )
     warnings.warn(message)
@@ -407,8 +407,6 @@ class ElasticASE:
         return {"relaxation": True, "optimizer": self.optimizer.__name__, "fmax": float(self.fmax)}
 
     def _relaxation_text(self):
-        if len(self.atoms) == 1:
-            return "not needed (1 atom)"
         if not self.relaxation:
             return "off (clamped-ion constants)"
         return f"on ({self.optimizer.__name__}, fmax = {self.fmax:g} eV/Å; relaxed-ion constants)"
@@ -573,8 +571,11 @@ class ElasticASE:
         for note in plan.notes:
             self._say(f"[ElasticASE] Note: {note}")
         if self.relaxes_atoms:
+            how = {"vasp": "IBRION = 2, ISIF = 2, NSW > 0 in the INCAR",
+                   "qe": "'calculation': 'relax' in the control section"}.get(
+                       getattr(adapter, "name", None), "the code's input")
             self._say("[ElasticASE] Note: for relaxed-ion constants, relax the atoms inside the fixed "
-                      "strained cells in the code's input (e.g. VASP IBRION = 2, ISIF = 2, NSW > 0).")
+                      f"strained cells ({how}).")
         return folders
 
     def run_jobs(self, workdir, command=None, runs=None, code=None, filename=None):

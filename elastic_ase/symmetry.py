@@ -4,7 +4,7 @@ Answers questions about a crystal before running calculations:
 - Space group number and symbol
 - Crystal system and Laue class
 - Number of independent elastic constants in this orientation
-- Which symmetry workflow is recommended (and whether the orientation matches)
+- Which deformation table is recommended (and whether the orientation matches)
 - Works with both file paths (CIF, POSCAR, etc.) and `ase.Atoms` objects.
 """
 from dataclasses import dataclass, field
@@ -17,7 +17,7 @@ from elastic_ase import auto, orientation, _spglib
 from elastic_ase.report import say
 from elastic_ase.systems import SYSTEMS
 
-# (last space group, crystal system, Laue class, named workflow)
+# (last space group, crystal system, Laue class, named table)
 _RANGES = [
     (2, "triclinic", "-1", "triclinic"),
     (15, "monoclinic", "2/m", "monoclinic"),
@@ -38,7 +38,7 @@ TRIGONAL_31M = frozenset({149, 151, 153, 157, 159, 162, 163})
 
 
 def classify(number: int):
-    """(crystal_system, laue_class, named_workflow) for space group 1-230."""
+    """(crystal_system, laue_class, named_table) for space group 1-230."""
     if not 1 <= number <= 230:
         raise ValueError(f"Space group number must be 1-230, got {number}")
     for last, system, laue, named in _RANGES:
@@ -75,30 +75,29 @@ class SymmetryReport:
     def summary(self):
         lines = [
             f"{self.source}: {self.formula} ({self.natoms} atoms)",
-            f"Space group:        {self.space_group} – {self.crystal_system} (Laue class {self.laue_class}), spglib symprec = {self.symprec} A",
+            f"Space group:        {self.space_group} – {self.crystal_system} (Laue class {self.laue_class}), spglib symprec = {self.symprec} Å",
             f"Elastic constants:  {self.n_constants} independent ({', '.join(self.constants)} in this orientation)",
         ]
         if self.recommended_works:
-            lines.append(f"Recommended:        symmetry='{self.recommended}'  – works in this orientation")
+            lines.append(f"Recommended:        symmetry='{self.recommended}' ({len(SYSTEMS[self.recommended].deformations)} "
+                         "deformations) – works in this orientation")
             others = [w for w in self.working if w != self.recommended]
             if others:
-                lines.append(f"Also works:         {', '.join(others)} (more calculations)")
+                lines.append("Also works:         " + ", ".join(
+                    f"{w} ({len(SYSTEMS[w].deformations)})" for w in others))
         else:
             lines.append(
-                f"Recommended:        symmetry='{self.recommended}'  – but NOT in this orientation: "
-                "crystal axes are not aligned with standard Cartesian conventions."
+                f"Recommended:        symmetry='{self.recommended}'  – fits after the automatic rotation "
+                "into the standard setting (reorient=True, default)"
             )
             if self.working:
-                lines.append(f"Works as it is:     {', '.join(self.working)}")
-            lines.append(
-                f"To use symmetry='{self.recommended}', align the structure first or use symmetry='auto'."
-            )
+                lines.append(f"With reorient=False: {', '.join(self.working)}")
         lines.append(f"Any orientation:    symmetry='auto' – {self.n_constants} deformations")
         return "\n".join(lines)
 
 
 def check_symmetry(structure, symprec=auto.SYMPREC, verbose=True):
-    """Report crystal symmetry and recommended workflow for an Atoms object or structure file.
+    """Report crystal symmetry and the recommended table for an Atoms object or structure file.
 
     Parameters
     ----------
@@ -127,11 +126,16 @@ def check_symmetry(structure, symprec=auto.SYMPREC, verbose=True):
 
     number = dataset.number if hasattr(dataset, "number") else dataset["number"]
     system, laue, named = classify(number)
+    if named.startswith("trigonal"):
+        named = "trigonal_2"  # what symmetry="auto" uses for every trigonal crystal (7 constants)
     rotations = auto.crystal_rotations(atoms, symprec)
     basis = auto.invariant_basis(rotations)
 
+    # one name per table: "orthorhombic" is an alias of "orthogonal"
+    alias = "orthogonal" if named == "orthorhombic" else "orthorhombic"
     working = sorted(
-        (name for name, table in SYSTEMS.items() if orientation.table_covers(table, basis)),
+        (name for name, table in SYSTEMS.items()
+         if name != alias and orientation.table_covers(table, basis)),
         key=lambda name: (len(SYSTEMS[name].constants), name)
     )
 

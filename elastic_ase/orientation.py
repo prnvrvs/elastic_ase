@@ -1,8 +1,6 @@
-"""Crystallographic orientation checks and axis alignment.
-
-Checks that required symmetry axes are aligned with the Cartesian frame:
-- Monoclinic: unique 2-fold axis along y
-- Hexagonal / Trigonal / Tetragonal: principal axis along z
+"""Crystallographic orientation: space group, whether a deformation table can represent the
+crystal in its current orientation (``table_covers``), and rotations that align symmetry axes
+with the Cartesian frame.
 """
 from math import pi
 import numpy as np

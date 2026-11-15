@@ -52,7 +52,6 @@ class CrystalSystem:
     constants: tuple
     layout: object  # callable: namespace of constants -> 6x6 nested list
     deformations: tuple
-    stability_text: str = "stiffness matrix is positive definite (all eigenvalues positive)"
 
     def matrix(self, values):
         """6x6 stiffness matrix from a sequence of independent constants."""
@@ -227,7 +226,6 @@ SYSTEMS = {
             _d("C11_C12_II", (1, 1, 1, 0, 0, 0)),
             _d("C44", (0, 0, 0, 1, 1, 1)),
         ),
-        "C11-C12 > 0 ; C11+2C12 > 0 ; C44 > 0 (equivalent to positive definiteness)",
     ),
     "orthogonal": CrystalSystem(
         "orthogonal", ("C11", "C22", "C33", "C12", "C13", "C23", "C44", "C55", "C66"),
@@ -246,7 +244,6 @@ SYSTEMS = {
             _d("C44", (0, 0, 0, 1, 1, 0)),
             _d("C11_C12_C13_C33", (1, 1, 1, 0, 0, 0)),
         ),
-        "C11 > |C12| ; 2C13^2 < C33(C11+C12) ; C44 > 0 ; C66 > 0",
     ),
     "tetragonal_1": CrystalSystem(
         "tetragonal_1", ("C11", "C12", "C13", "C33", "C44", "C66"), _tetragonal_1,

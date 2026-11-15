@@ -1,6 +1,6 @@
-Space group:        R-3 (148) – trigonal II (Laue class -3), spglib symprec = 0.001 A
+Space group:        R-3 (148) – trigonal II (Laue class -3), spglib symprec = 0.001 Å
 Elastic constants:  7 independent (C11, C12, C13, C14, C15, C33, C44 in this orientation)
-Recommended:        symmetry='trigonal_2'  – works in this orientation
+Recommended:        symmetry='trigonal_2' (7 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'trigonal_2'
 Calculations           : 29 (including the unstrained cell)

@@ -48,8 +48,9 @@ Polycrystalline averages
 
 ``K_voigt``, ``K_reuss``, ``K_VRH``, ``G_voigt``, ``G_reuss``, ``G_VRH`` (bulk and shear
 moduli), ``E_VRH`` (Young's modulus), ``nu_VRH`` (Poisson's ratio), ``Pugh_ratio`` (:math:`K/G`;
-above about 1.75 usually ductile), ``Cauchy_pressure`` (:math:`C_{12} - C_{44}`),
-``Zener_anisotropy`` (:math:`2C_{44}/(C_{11} - C_{12})`, 1 for isotropic),
+above about 1.75 usually ductile), for cubic crystals only ``Cauchy_pressure``
+(:math:`C_{12} - C_{44}`) and ``Zener_anisotropy`` (:math:`2C_{44}/(C_{11} - C_{12})`, 1 for
+isotropic),
 ``universal_anisotropy`` (:math:`A^U = 5G_V/G_R + K_V/K_R - 6`, 0 for isotropic) and the
 Chung–Buessem anisotropies ``chung_buessem_G``, ``chung_buessem_K``. Formulas in
 :doc:`../theory`.
@@ -70,32 +71,31 @@ Derived properties
    * - ``debye_temperature_K``
      - Debye temperature from the mean sound velocity (Anderson)
    * - ``kleinman_parameter``
-     - cubic crystals only: :math:`\zeta = (C_{11} + 8C_{12})/(7C_{11} + 2C_{12})`
+     - cubic crystals with internal strain only (e.g. diamond, zincblende; not fcc or bcc): :math:`\zeta = (C_{11} + 8C_{12})/(7C_{11} + 2C_{12})`
    * - ``hardness_chen_GPa``, ``hardness_tian_GPa``
      - empirical Vickers hardness models (Chen 2011, Tian 2012). Rough estimates fitted to
        hard covalent and ionic solids; for soft metals they are not meaningful.
 
-For fcc Al with PBE (:math:`C_{11} = 106.6`, :math:`C_{12} = 63.4`, :math:`C_{44} = 28.9`
-GPa) this gives :math:`v_l = 6422` m/s (experiment about 6420 m/s) and
-:math:`\theta_D = 405` K (experiment 428 K).
-
 The same function is available on its own:
 ``elastic_ase.derived_properties(averages, atoms, stiffness_standard, symmetry)``.
+
+.. _residual-stress:
 
 Residual stress
 ---------------
 
 The method assumes a stress-free reference cell. If it is not – the cell was not relaxed, or
 relaxed with other settings – the energy–strain curves pick up a linear term, and the
-constants are wrong: EMT Al with 1.6 GPa of tension gives :math:`C_{11}` and :math:`C_{44}`
-about 5 GPa (10–15 %) too low.
+constants are wrong: EMT Al with 1.6 GPa of residual tension (lattice constant 1.4 % too
+large) gives :math:`C_{11} = 47.6` instead of 53.2 GPa and :math:`C_{44} = 31.0` instead of
+36.2 GPa.
 
 The linear coefficient :math:`b` of each fit equals :math:`\sigma_0 \cdot e` for that
 deformation, so the fits themselves give the residual stress – no stress calculation is
-needed, and it also works on OUTCARs. elastic_ase reports the residual pressure
+needed, and it works for run folders too. elastic_ase reports the residual pressure
 :math:`P = -\operatorname{tr}\sigma_0/3` and warns when the stress along any deformation
-exceeds 0.5 GPa. The linear term is taken from
-a cubic fit, because with a quadratic fit the anharmonic cubic term would show up as a fake
+exceeds 0.5 GPa. With four or more strain
+values the linear term is taken from a cubic fit, because with a quadratic fit the anharmonic cubic term would show up as a fake
 pressure at larger strains (0.3 GPa for Al at ±3 %).
 
 .. code-block:: python
@@ -113,13 +113,14 @@ Fit quality and plots
 ``plot_fits`` draws one panel per deformation: the points and the fitted parabola.
 
 Look at the curves first: scatter means unconverged settings (often the k-point mesh), a
-single point off the curve a failed or mixed-up run, an asymmetric curve with a poor
-:math:`R^2` strains that are too large.
+single point off the curve a failed or mixed-up run, and an asymmetric curve with a poor
+:math:`R^2` means the strains are too large.
 
 Directional properties (elastic-vis)
 ------------------------------------
 
-With elastic-vis installed:
+With elastic-vis installed (``theta`` polar and ``phi`` azimuthal angle of the direction, in
+radians):
 
 .. code-block:: python
 

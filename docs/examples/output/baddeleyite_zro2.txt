@@ -1,6 +1,6 @@
-Space group:        P2_1/c (14) – monoclinic (Laue class 2/m), spglib symprec = 0.001 A
+Space group:        P2_1/c (14) – monoclinic (Laue class 2/m), spglib symprec = 0.001 Å
 Elastic constants:  13 independent (C11, C12, C13, C15, C22, C23, C25, C33, C35, C44, C46, C55, C66 in this orientation)
-Recommended:        symmetry='monoclinic'  – works in this orientation
+Recommended:        symmetry='monoclinic' (13 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'monoclinic'
 Calculations           : 53 (including the unstrained cell)

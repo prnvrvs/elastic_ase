@@ -220,7 +220,7 @@ def from_structure(atoms, symprec=SYMPREC):
 
 
 def standard_constants(c_standard, spacegroup_number):
-    """Named workflow and textbook constants for a stiffness matrix in the standard setting."""
+    """Named table and textbook constants for a stiffness matrix in the standard setting."""
     from elastic_ase.symmetry import classify
     from elastic_ase.systems import SYSTEMS
 

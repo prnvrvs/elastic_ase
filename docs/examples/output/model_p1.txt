@@ -1,6 +1,6 @@
-Space group:        P-1 (2) – triclinic (Laue class -1), spglib symprec = 0.001 A
+Space group:        P-1 (2) – triclinic (Laue class -1), spglib symprec = 0.001 Å
 Elastic constants:  21 independent (C11, C12, C13, C14, C15, C16, C22, C23, C24, C25, C26, C33, C34, C35, C36, C44, C45, C46, C55, C56, C66 in this orientation)
-Recommended:        symmetry='triclinic'  – works in this orientation
+Recommended:        symmetry='triclinic' (21 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'triclinic'
 Calculations           : 85 (including the unstrained cell)

@@ -1,6 +1,6 @@
-Space group:        Fd-3m (227) – cubic (Laue class m-3m), spglib symprec = 0.001 A
+Space group:        Fd-3m (227) – cubic (Laue class m-3m), spglib symprec = 0.001 Å
 Elastic constants:  3 independent (C11, C12, C44 in this orientation)
-Recommended:        symmetry='cubic'  – works in this orientation
+Recommended:        symmetry='cubic' (3 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'cubic'
 Calculations           : 13 (including the unstrained cell)

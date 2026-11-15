@@ -1,6 +1,6 @@
 [ElasticASE] Auto-detected crystal symmetry: 'cubic'
 Calculations           : 13 (including the unstrained cell)
-Atom relaxation        : not needed (1 atom)
+Atom relaxation        : on (BFGS, fmax = 0.001 eV/Å; relaxed-ion constants)
 
 6x6 Stiffness Matrix C_ij (GPa) [Cartesian Frame]:
         C1      C2      C3      C4      C5      C6

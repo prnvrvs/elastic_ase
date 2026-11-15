@@ -110,6 +110,9 @@ def analyse(system, strains, energies, atoms, symmetry, standard_rotation=None,
     # usual meaning only with the crystal axes along x, y, z: use the standard setting.
     is_stable, criteria = check_mechanical_stability(c_standard, symmetry)
     averages = calculate_polycrystalline_averages(c_standard)
+    if symmetry != "cubic":  # Zener anisotropy and C12 - C44 are cubic quantities
+        averages.pop("Zener_anisotropy", None)
+        averages.pop("Cauchy_pressure", None)
     # plain Python numbers, so that printing a dictionary shows {'C11': 53.2, ...}
     constants = {k: float(v) for k, v in constants.items()}
     standard_constants = {k: float(v) for k, v in standard_constants.items()}

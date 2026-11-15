@@ -1,3 +1,4 @@
+"""Mechanical stability and the stiffness matrix from the fitted curvatures."""
 import numpy as np
 
 from elastic_ase.systems import get_system
@@ -18,9 +19,9 @@ def check_mechanical_stability(stiffness, symmetry="cubic"):
     if sym == "cubic":
         criteria = "C11 - C12 > 0 and C11 + 2*C12 > 0 and C44 > 0"
     elif sym in ["hexagonal", "hex"]:
-        criteria = "C11 > |C12| and C44 > 0 and C33 > 0 and C11 - C12 > 0 and 2*C13^2 < C33*(C11 + C12)"
+        criteria = "C11 > |C12| and 2*C13^2 < C33*(C11 + C12) and C44 > 0"
     else:
-        criteria = "All eigenvalues of stiffness matrix C > 0 (Positive Definite)"
+        criteria = "all eigenvalues of C > 0 (positive definite)"
     criteria += f" (smallest eigenvalue {eigenvalues.min():.2f} GPa)"
 
     return stable, criteria

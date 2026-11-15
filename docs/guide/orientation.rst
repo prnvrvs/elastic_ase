@@ -13,7 +13,7 @@ named table is used:
 
    * - Space groups
      - Table
-     - Independent constants
+     - Constants fitted
    * - 195–230 (cubic)
      - ``cubic``
      - 3

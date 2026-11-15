@@ -17,7 +17,7 @@ example uses 3.9943 Å, the EMT equilibrium lattice constant of Al:
    ec = ElasticConstants(atoms)
    results = ec.calculate()
 
-   C = results["stiffness_matrix"]       # 6x6, GPa
+   print(results["stiffness_matrix"])    # 6x6, GPa
    print(results["independent_constants"])
    print(results["polycrystalline_averages"]["K_VRH"], "GPa")
    print(results["is_stable"])
@@ -75,17 +75,22 @@ Output on the screen
      Density              :   2812.2 kg/m³
      Sound velocity       : longitudinal 4945 m/s, transverse 2788 m/s, mean 3102 m/s
      Debye temperature    :    367.0 K  (Anderson)
-     Kleinman parameter   :    0.720
      Vickers hardness     : 3.07 GPa (Chen), 4.16 GPa (Tian)  [empirical, rough]
      Residual pressure    :    -0.00 GPa  (from the fits; should be ~0)
    ======================================================================
 
-followed by the three ``print`` lines:
+followed by the four ``print`` lines:
 
 .. code-block:: text
 
-   {'C11': 53.22540646083159, 'C12': 32.79886407889344, 'C44': 36.182294384609484}
-   39.607711539539494 GPa
+   [[53.22540646 32.79886408 32.79886408  0.          0.          0.        ]
+    [32.79886408 53.22540646 32.79886408  0.          0.          0.        ]
+    [32.79886408 32.79886408 53.22540646  0.          0.          0.        ]
+    [ 0.          0.          0.         36.18229438  0.          0.        ]
+    [ 0.          0.          0.          0.         36.18229438  0.        ]
+    [ 0.          0.          0.          0.          0.         36.18229438]]
+   {'C11': 53.22540646083161, 'C12': 32.79886407889344, 'C44': 36.18229438460098}
+   39.60771153953951 GPa
    True
 
 How to read the report, from top to bottom:
@@ -122,8 +127,8 @@ Look at the curves
 
    ec.plot_fits("energy_strain.png")
 
-Smooth parabolas through all points are the first check. Scatter or kinks mean unconverged
-settings or a failed calculation.
+Smooth parabolas through all points are the first check (what to look for:
+:doc:`guide/results`).
 
 Save the results
 ----------------

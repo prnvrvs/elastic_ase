@@ -1,6 +1,6 @@
-Space group:        P6/m (175) – hexagonal (Laue class 6/m), spglib symprec = 0.001 A
+Space group:        P6/m (175) – hexagonal (Laue class 6/m), spglib symprec = 0.001 Å
 Elastic constants:  5 independent (C11, C12, C13, C33, C44 in this orientation)
-Recommended:        symmetry='hexagonal'  – works in this orientation
+Recommended:        symmetry='hexagonal' (5 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'hexagonal'
 Calculations           : 21 (including the unstrained cell)

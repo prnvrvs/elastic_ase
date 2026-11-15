@@ -62,7 +62,9 @@ class TestFeatures(unittest.TestCase):
         self.assertAlmostEqual(p["v_longitudinal_m_s"], 6422, delta=5)
         self.assertAlmostEqual(p["v_transverse_m_s"], 3076, delta=5)
         self.assertAlmostEqual(p["debye_temperature_K"], 404.7, delta=1.0)
-        self.assertAlmostEqual(p["kleinman_parameter"], 0.703, delta=0.002)
+        self.assertNotIn("kleinman_parameter", p)   # fcc: no internal strain
+        p_si = derived_properties(calculate_polycrystalline_averages(C), bulk("Si", "diamond", a=5.43), C, "cubic")
+        self.assertAlmostEqual(p_si["kleinman_parameter"], 0.703, delta=0.002)
         p_hex = derived_properties(calculate_polycrystalline_averages(C), bulk("Al", "fcc", a=4.04), C, "hexagonal")
         self.assertNotIn("kleinman_parameter", p_hex)
 

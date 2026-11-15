@@ -1,9 +1,9 @@
 Examples by crystal symmetry
 ============================
 
-The crystal's Laue group decides how many independent elastic constants it has, and so which
+The crystal's Laue class decides how many independent elastic constants it has, and so which
 deformations elastic_ase applies and how many calculations are needed. This page has one
-example for each of the 11 Laue groups. Every example goes through the same four steps:
+example for each of the 11 Laue classes. Every example goes through the same four steps:
 
 1. **Structure** – build or read it; ``check_symmetry`` shows which method will be used.
 2. **Relax** – cell and atoms, with the calculator you use for the elastic constants.
@@ -11,17 +11,24 @@ example for each of the 11 Laue groups. Every example goes through the same four
    atoms are relaxed inside every strained cell (``relaxation=True``, the default).
 4. **Check and save** – the energy–strain curves and a JSON file with everything.
 
-Each example is a complete script (download link below it); the calculator is the
+Steps 2 to 4 are the same for every crystal (shown here for silicon); each example below
+shows its structure, the screen output and the result, with the complete script to download.
+
+.. literalinclude:: scripts/si_diamond.py
+   :language: python
+   :start-after: # Step 2: relax
+
+The calculator is the
 machine-learning potential GRACE-2L-OAM (``pip install tensorpotential``), but any ASE
 calculator works the same way. The numbers are those of this potential – they show what the
-output looks like, not reference values for the materials. The Laue groups 6/m and −1 have no
+output looks like, not reference values for the materials. The Laue classes 6/m and -1 have no
 simple common example, so a small model crystal shows their method.
 
 .. list-table:: Overview
    :header-rows: 1
    :widths: 14 24 20 14 16
 
-   * - Laue group
+   * - Laue class
      - Example
      - Table
      - Constants
@@ -49,7 +56,7 @@ simple common example, so a small model crystal shows their method.
    * - -3m
      - corundum Al₂O₃
      - ``trigonal_2``
-     - 6
+     - 7
      - 29
    * - -3
      - ilmenite FeTiO₃
@@ -82,7 +89,7 @@ simple common example, so a small model crystal shows their method.
      - 21
      - 85
 
-"Calculations" counts the unstrained cell and every deformation at the default strains (±0.5 and ±1 %); the deformations are listed in :doc:`../guide/systems`.
+"Calculations" counts the unstrained cell and every deformation at the default strains (±0.5 and ±1 %); the deformations are listed in :doc:`../systems`.
 
 Cubic
 -----
@@ -92,32 +99,12 @@ m-3m: silicon (diamond)
 
 **Method:** ``cubic`` table – 3 constants (:math:`C_{11}, C_{12}, C_{44}`), 3 deformations, 13 calculations.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/si_diamond.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/si_diamond.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/si_diamond.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/si_diamond.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -143,32 +130,12 @@ m-3: pyrite FeS₂
 
 **Method:** ``cubic`` table, as for m-3m: the lower point symmetry does not add elastic constants.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/pyrite_fes2.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/pyrite_fes2.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/pyrite_fes2.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/pyrite_fes2.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -197,32 +164,12 @@ Hexagonal
 
 **Method:** ``hexagonal`` table – 5 constants (:math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}`; :math:`C_{66} = (C_{11} - C_{12})/2`), 5 deformations, 21 calculations. The 6-fold axis is put along :math:`z` automatically.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/mg_hcp.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/mg_hcp.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/mg_hcp.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/mg_hcp.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -250,34 +197,28 @@ Hexagonal
 6/m: model crystal (P6/m)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Method:** ``hexagonal`` table, as for 6/mmm: both hexagonal Laue groups have the same 5 constants.
+**Method:** ``hexagonal`` table, as for 6/mmm: both hexagonal Laue classes have the same 5 constants.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/model_p6m.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
 
-**Step 2 – Relax.** The cell is relaxed with the atoms kept in place – a model, not a real material.
+**Relax:** the cell is relaxed with the atoms kept in place – a model, not a real material.
 
 .. literalinclude:: scripts/model_p6m.py
    :language: python
    :start-after: # Step 2: relax
    :end-before: # Step 3: elastic constants
 
-**Step 3 – Elastic constants.** The atoms stay fixed in the strained cells as well (``relaxation=False``).
+**Elastic constants:** the atoms stay fixed in the strained cells as well.
 
 .. literalinclude:: scripts/model_p6m.py
    :language: python
    :start-after: # Step 3: elastic constants
    :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/model_p6m.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -308,34 +249,14 @@ Trigonal
 -3m: corundum Al₂O₃
 ^^^^^^^^^^^^^^^^^^^
 
-**Method:** ``trigonal_2`` table – 7 deformations, 29 calculations. -3m has 6 constants (:math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}, C_{14}`); the fitted :math:`C_{15}` is zero in the standard setting.
+**Method:** ``trigonal_2`` table – 7 constants (:math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}, C_{14}, C_{15}`), 7 deformations, 29 calculations. For -3m the fitted :math:`C_{15}` comes out zero.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/corundum_al2o3.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/corundum_al2o3.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/corundum_al2o3.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/corundum_al2o3.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -353,12 +274,14 @@ Trigonal
      - :math:`C_{33}`
      - :math:`C_{44}`
      - :math:`C_{14}`
+     - :math:`C_{15}`
    * - 439.0
      - 152.5
      - 109.3
      - 439.2
      - 125.5
      - 17.9
+     - 0.0
 
 :math:`K_{VRH} = 228.6` GPa, :math:`G_{VRH} = 139.9` GPa, mechanically stable. Script: :download:`corundum_al2o3.py <scripts/corundum_al2o3.py>`.
 
@@ -367,32 +290,12 @@ Trigonal
 
 **Method:** ``trigonal_2`` table – 7 constants (:math:`C_{15}` in addition to those of -3m), 7 deformations, 29 calculations.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/ilmenite_fetio3.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/ilmenite_fetio3.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/ilmenite_fetio3.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/ilmenite_fetio3.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -429,32 +332,12 @@ Tetragonal
 
 **Method:** ``tetragonal_1`` table – 6 constants (:math:`C_{11}, C_{12}, C_{13}, C_{33}, C_{44}, C_{66}`), 6 deformations, 25 calculations. Explained in detail in :doc:`step_by_step`.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/rutile_tio2.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/rutile_tio2.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/rutile_tio2.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/rutile_tio2.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -486,32 +369,12 @@ Tetragonal
 
 **Method:** ``tetragonal_2`` table – 7 constants (:math:`C_{16}` in addition), 7 deformations, 29 calculations.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/scheelite_cawo4.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/scheelite_cawo4.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/scheelite_cawo4.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/scheelite_cawo4.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -548,32 +411,12 @@ mmm: black phosphorus
 
 **Method:** ``orthogonal`` table – 9 constants (:math:`C_{11}, C_{22}, C_{33}, C_{12}, C_{13}, C_{23}, C_{44}, C_{55}, C_{66}`), 9 deformations, 37 calculations.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/black_p.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/black_p.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/black_p.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/black_p.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -624,32 +467,12 @@ Monoclinic
 
 **Method:** ``monoclinic`` table – 13 constants (the 9 orthorhombic ones and :math:`C_{15}, C_{25}, C_{35}, C_{46}`), 13 deformations, 53 calculations. The unique axis :math:`b` is put along :math:`y` automatically.
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/baddeleyite_zro2.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
-
-**Step 2 – Relax.** Cell and atoms, keeping the space group (``FixSymmetry``).
-
-.. literalinclude:: scripts/baddeleyite_zro2.py
-   :language: python
-   :start-after: # Step 2: relax
-   :end-before: # Step 3: elastic constants
-
-**Step 3 – Elastic constants.** The atoms are relaxed inside every strained cell.
-
-.. literalinclude:: scripts/baddeleyite_zro2.py
-   :language: python
-   :start-after: # Step 3: elastic constants
-   :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/baddeleyite_zro2.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 
@@ -700,32 +523,26 @@ Triclinic
 
 **Method:** ``triclinic`` table – all 21 constants, 21 deformations, 85 calculations. It needs no symmetry, so it is also the fallback when the symmetry cannot be found, and a cross-check for any crystal (``symmetry="triclinic"``).
 
-**Step 1 – Structure.** 
+**Structure:**
 
 .. literalinclude:: scripts/model_p1.py
    :language: python
    :start-after: # Step 1: structure
    :end-before: # Step 2: relax
 
-**Step 2 – Relax.** The cell is relaxed with the atoms kept in place – a model, not a real material.
+**Relax:** the cell is relaxed with the atoms kept in place – a model, not a real material.
 
 .. literalinclude:: scripts/model_p1.py
    :language: python
    :start-after: # Step 2: relax
    :end-before: # Step 3: elastic constants
 
-**Step 3 – Elastic constants.** The atoms stay fixed in the strained cells as well (``relaxation=False``).
+**Elastic constants:** the atoms stay fixed in the strained cells as well.
 
 .. literalinclude:: scripts/model_p1.py
    :language: python
    :start-after: # Step 3: elastic constants
    :end-before: # Step 4: check and save
-
-**Step 4 – Check and save.** 
-
-.. literalinclude:: scripts/model_p1.py
-   :language: python
-   :start-after: # Step 4: check and save
 
 **Screen output** (shortened):
 

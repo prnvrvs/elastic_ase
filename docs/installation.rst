@@ -15,6 +15,22 @@ The current version from GitHub:
 
    pip install "git+https://github.com/prnvrvs/elastic_ase.git"
 
+Calculators
+-----------
+
+elastic_ase needs an ASE calculator that returns the energy (and the forces, to relax the
+atoms in multi-atom cells); install the one you use separately. EMT and EAM are built into ASE;
+machine-learning potentials (GRACE, MACE, …) and GPAW are installed on their own
+(:doc:`examples/calculators`), as are VASP and QE (:doc:`guide/dft`).
+
+Check the installation
+----------------------
+
+.. code-block:: bash
+
+   elastic-ase --help
+   python -c "import elastic_ase; print(elastic_ase.__version__)"
+
 Optional: directional properties (elastic-vis)
 ----------------------------------------------
 
@@ -46,21 +62,6 @@ stability, Voigt–Reuss–Hill averages and derived properties. Only these need
 * ``ec.Young``, ``ec.shear``, ``ec.poisson``, ``ec.linear_compressibility``,
   ``ec.visualize`` and ``ec.to_elastic_vis`` (:doc:`guide/results`);
 * the ``--plot`` options of the :doc:`command line <guide/cli>`.
-
-Calculators
------------
-
-elastic_ase needs only an ASE calculator that returns the energy; install the one you use
-separately. EMT and EAM are built into ASE; machine-learning potentials (GRACE, MACE, …), GPAW,
-VASP and QE are installed on their own (:doc:`examples/calculators`).
-
-Check the installation
-----------------------
-
-.. code-block:: bash
-
-   elastic-ase --help
-   python -c "import elastic_ase; print(elastic_ase.__version__)"
 
 Development
 -----------

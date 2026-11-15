@@ -33,7 +33,7 @@ Options
    * - ``-m``, ``--model``
      - GRACE model name (default ``GRACE-2L-OAM``).
    * - ``-s``, ``--symmetry``
-     - ``auto`` (default) or a named table (:doc:`systems`).
+     - ``auto`` (default) or a named table (:doc:`../systems`).
    * - ``--strains``
      - Comma-separated strains (default ``-0.01,-0.005,0.0,0.005,0.01``).
    * - ``--frame``

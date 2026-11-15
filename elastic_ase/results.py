@@ -11,7 +11,7 @@ class ElasticResults(Mapping):
     """Everything computed from the energies. Moduli in GPa, energies in eV.
 
     Works like a read-only dictionary as well (``results["stiffness_matrix"]``,
-    ``results.items()``), so code written for the earlier dictionary keeps working.
+    ``results.items()``).
     """
     stiffness_matrix: np.ndarray          # in the frame chosen with frame=
     stiffness_cartesian: np.ndarray       # frame of the calculation (after any rotation)

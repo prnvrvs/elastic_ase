@@ -1,6 +1,6 @@
-Space group:        Cmce (64) – orthorhombic (Laue class mmm), spglib symprec = 0.001 A
+Space group:        Cmce (64) – orthorhombic (Laue class mmm), spglib symprec = 0.001 Å
 Elastic constants:  9 independent (C11, C12, C13, C22, C23, C33, C44, C55, C66 in this orientation)
-Recommended:        symmetry='orthorhombic'  – works in this orientation
+Recommended:        symmetry='orthorhombic' (9 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'orthogonal'
 Calculations           : 37 (including the unstrained cell)

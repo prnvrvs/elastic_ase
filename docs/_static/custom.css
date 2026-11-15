@@ -160,3 +160,8 @@ html[data-theme="dark"] {
     white-space: normal;
     overflow-wrap: anywhere;
 }
+
+/* copy button on code blocks: always visible, not only on hover */
+.highlight button.copybtn {
+  opacity: 1 !important;
+}

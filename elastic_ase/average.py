@@ -1,3 +1,4 @@
+"""Voigt, Reuss and Hill polycrystalline averages from the 6x6 stiffness matrix."""
 import numpy as np
 
 def calculate_polycrystalline_averages(C):
@@ -48,7 +49,7 @@ def calculate_polycrystalline_averages(C):
 
     pugh = K_VRH / G_VRH if abs(G_VRH) > 1e-12 else 0.0
 
-    # Cauchy pressure and Zener anisotropy (for cubic/orthorhombic systems)
+    # Cauchy pressure and Zener anisotropy (meaningful for cubic crystals)
     cauchy = C12 - C44
     denom_A = C11 - C12
     anisotropy = (2.0 * C44) / denom_A if abs(denom_A) > 1e-12 else 1.0
@@ -56,7 +57,7 @@ def calculate_polycrystalline_averages(C):
     # Universal elastic anisotropy index A^U (Ranganathan & Ostoja-Starzewski, PRL 2008)
     # A^U = 5 * (G_voigt / G_reuss) + (K_voigt / K_reuss) - 6 >= 0 (0 for isotropic)
     if G_reuss > 1e-6 and K_reuss > 1e-6:
-        universal_anisotropy = max(0.0, float(5.0 * (G_voigt / G_reuss) + (K_voigt / K_reuss) - 6.0))
+        universal_anisotropy = float(5.0 * (G_voigt / G_reuss) + (K_voigt / K_reuss) - 6.0)
     else:
         universal_anisotropy = 0.0
 

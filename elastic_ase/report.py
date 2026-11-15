@@ -46,10 +46,11 @@ def format_report(results, frame="cartesian", space_group="", color=True):
             f"  Shear Modulus G_VRH  : {a['G_VRH']:8.2f} GPa  (Voigt: {a['G_voigt']:.2f}, Reuss: {a['G_reuss']:.2f})",
             f"  Young's Modulus E    : {a['E_VRH']:8.2f} GPa",
             f"  Poisson's Ratio nu   : {a['nu_VRH']:8.3f}",
-            f"  Pugh Ratio (K/G)     : {a['Pugh_ratio']:8.2f}  (> 1.75 usually ductile)",
-            f"  Cauchy Pressure      : {a['Cauchy_pressure']:8.2f} GPa",
-            f"  Zener Anisotropy A   : {a['Zener_anisotropy']:8.2f}",
-            f"  Universal Anisotropy : A^U = {a['universal_anisotropy']:6.3f}  (0 for isotropic)"]
+            f"  Pugh Ratio (K/G)     : {a['Pugh_ratio']:8.2f}  (> 1.75 usually ductile)"]
+    if "Cauchy_pressure" in a:  # cubic only
+        out += [f"  Cauchy Pressure      : {a['Cauchy_pressure']:8.2f} GPa",
+                f"  Zener Anisotropy A   : {a['Zener_anisotropy']:8.2f}"]
+    out += [f"  Universal Anisotropy : A^U = {a['universal_anisotropy']:6.3f}  (0 for isotropic)"]
 
     p = r.derived_properties
     out += ["", rule, " Derived Properties:",

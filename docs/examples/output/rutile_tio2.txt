@@ -1,6 +1,6 @@
-Space group:        P4_2/mnm (136) – tetragonal I (Laue class 4/mmm), spglib symprec = 0.001 A
+Space group:        P4_2/mnm (136) – tetragonal I (Laue class 4/mmm), spglib symprec = 0.001 Å
 Elastic constants:  6 independent (C11, C12, C13, C33, C44, C66 in this orientation)
-Recommended:        symmetry='tetragonal_1'  – works in this orientation
+Recommended:        symmetry='tetragonal_1' (6 deformations) – works in this orientation
 
 [ElasticASE] Auto-detected crystal symmetry: 'tetragonal_1'
 Calculations           : 25 (including the unstrained cell)

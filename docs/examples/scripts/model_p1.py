@@ -1,9 +1,9 @@
-"""Elastic constants of a model crystal in P-1 (Laue group -1) with the GRACE-2L-OAM potential.
+"""Elastic constants of a model crystal in P-1 (Laue class -1) with the GRACE-2L-OAM potential.
 
 Needs: pip install elastic-ase tensorpotential
 Run:   python model_p1.py
 """
-from ase.constraints import FixAtoms, FixSymmetry
+from ase.constraints import FixAtoms
 from ase.filters import FrechetCellFilter
 from ase.optimize import BFGS
 from ase.spacegroup import crystal
@@ -18,7 +18,7 @@ check_symmetry(atoms)
 
 # Step 2: relax
 atoms.calc = grace_fm("GRACE-2L-OAM")
-atoms.set_constraint([FixAtoms(indices=range(len(atoms))), FixSymmetry(atoms)])
+atoms.set_constraint(FixAtoms(indices=range(len(atoms))))
 BFGS(FrechetCellFilter(atoms), logfile=None).run(fmax=1e-3)
 atoms.set_constraint()
 

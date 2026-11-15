@@ -25,7 +25,11 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
+    "sphinx_copybutton",
 ]
+# copy button: leave out prompts such as ">>> " and "$ " when copying
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True
 # links to the documentation of types used in signatures (ase.Atoms, numpy.ndarray, ...)
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -160,7 +164,7 @@ def _generate_system_tables(app):
         parts += [".. list-table::", "   :header-rows: 1", "   :widths: 20 48 32", "",
                   "   * - Run folder",
                   "     - Deformation :math:`F = I + \\varepsilon` applied to the cell",
-                  "     - Fitted :math:`a` in :math:`E/V_0 = a\\,\\delta^2`"]
+                  "     - Fitted :math:`a` in :math:`(E - E_0)/V_0 = a\\,\\delta^2 + \\dots`"]
         for k, d in enumerate(spec.deformations):
             a = _combination(list(zip(design[k], spec.constants)))
             parts += ["   * - ``{}``".format(d.folder),

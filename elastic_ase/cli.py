@@ -1,7 +1,4 @@
-"""
-Command-line interface (CLI) for ElasticASE.
-Allows calculating elastic constants directly from terminal for any structure file.
-"""
+"""Command line tool ``elastic-ase``: elastic constants of a structure file."""
 
 import os
 import sys
@@ -54,7 +51,7 @@ def parse_args(args=None):
             "tetragonal_1", "tetragonal_2", "trigonal_1", "trigonal_2",
             "monoclinic", "triclinic"
         ],
-        help="Crystal symmetry family."
+        help="Deformation table: 'auto' (default) or a named table."
     )
     parser.add_argument(
         "--frame",
@@ -73,7 +70,7 @@ def parse_args(args=None):
         "-o", "--output",
         type=str,
         default=None,
-        help="Output file path to save results (.json, .csv, or .txt for plain 6x6 matrix)."
+        help="Save the results: .json (everything), .csv, any other extension: plain 6x6 matrix."
     )
     parser.add_argument(
         "--no-reorient",
@@ -95,12 +92,13 @@ def parse_args(args=None):
         "--fmax",
         type=float,
         default=1e-3,
-        help="Force criterion (eV/Å) of the atom relaxation in the strained cells."
+        help="Force criterion (eV/Å) of the atom relaxation in the strained cells and the "
+             "unstrained cell."
     )
     parser.add_argument(
         "-q", "--quiet",
         action="store_true",
-        help="Suppress detailed terminal output."
+        help="No report."
     )
 
     # Visualization flags powered by elastic-vis
@@ -109,12 +107,12 @@ def parse_args(args=None):
         "--plot", action="store_true",
         help="Generate directional elastic property plots via elastic-vis."
     )
-    vis_group.add_argument("--Young", action="store_true", help="Generate Young's modulus plots.")
-    vis_group.add_argument("--Shear", action="store_true", help="Generate Shear modulus plots.")
-    vis_group.add_argument("--Poisson", action="store_true", help="Generate Poisson's ratio plots.")
-    vis_group.add_argument("--LC", action="store_true", help="Generate Linear Compressibility plots.")
-    vis_group.add_argument("--2D", dest="plot_2d", action="store_true", help="Generate 2D polar plots.")
-    vis_group.add_argument("--3D", dest="plot_3d", action="store_true", help="Generate 3D surface plots.")
+    vis_group.add_argument("--Young", action="store_true", help="Young's modulus plots (default: Young and shear if none is chosen).")
+    vis_group.add_argument("--Shear", action="store_true", help="Shear modulus plots.")
+    vis_group.add_argument("--Poisson", action="store_true", help="Poisson's ratio plots.")
+    vis_group.add_argument("--LC", action="store_true", help="Linear compressibility plots.")
+    vis_group.add_argument("--2D", dest="plot_2d", action="store_true", help="2D polar plots (default: 2D and 3D if neither is chosen).")
+    vis_group.add_argument("--3D", dest="plot_3d", action="store_true", help="3D surface plots.")
     vis_group.add_argument(
         "--format", type=str, default="png", choices=["png", "pdf", "svg"],
         help="Image format for saved figures."

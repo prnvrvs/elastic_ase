@@ -1,5 +1,5 @@
-Fast calculators (in memory)
-============================
+ASE calculators
+===============
 
 With any ASE calculator – EMT, a classical potential, a machine-learning potential, a DFT
 code driven through ASE – everything runs in one call:
@@ -20,11 +20,9 @@ Before you start
 
 **Converge the settings** of your calculator on the elastic constants themselves (k-mesh,
 smearing, cutoff; see :doc:`convergence`), then **relax the structure** – cell and atoms –
-with the same calculator and settings. The method assumes a stress-free reference: EMT
-aluminium with 1.6 GPa of residual tension (lattice constant 1.4 % too large) gives
-:math:`C_{11} = 47.6` instead of 53.2 GPa and :math:`C_{44} = 31.0` instead of 36.2 GPa.
+with the same calculator and settings. The method assumes a stress-free reference;
 elastic_ase estimates the residual stress from the fits and warns when it exceeds 0.5 GPa
-along any deformation (see :doc:`results`).
+along any deformation (:ref:`residual-stress`).
 
 .. code-block:: python
 
@@ -97,7 +95,7 @@ Two typical changes:
      - ``"auto"`` (default): detected with spglib, the fewest deformations for the crystal.
        Or a named table: ``"cubic"``, ``"hexagonal"``, ``"tetragonal_1"``,
        ``"tetragonal_2"``, ``"trigonal_1"``, ``"trigonal_2"``, ``"orthogonal"``
-       (= ``"orthorhombic"``), ``"monoclinic"``, ``"triclinic"`` (see :doc:`systems`).
+       (= ``"orthorhombic"``), ``"monoclinic"``, ``"triclinic"`` (see :doc:`../systems`).
        ``check_symmetry(atoms)`` shows which tables work for your structure.
    * - ``strains``
      - Strain values :math:`\delta` applied with every deformation (at least 3 different
@@ -110,6 +108,7 @@ Two typical changes:
        constants, the ones to compare with experiment. The atoms of a multi-atom cell move
        when the cell is strained, also in diamond Si or hcp metals under shear.
        ``False``: keep them at their scaled positions – *clamped-ion* constants.
+       The unstrained cell is relaxed the same way.
 
        * The relaxation uses forces, so the calculator must provide them (energy-only
          calculators need ``relaxation=False``).
@@ -123,12 +122,12 @@ Two typical changes:
        accurate constants for multi-atom cells at the cost of more force calls.
    * - ``reorient``
      - ``True`` (default): rotate the structure rigidly into the standard crystallographic
-       setting before straining (cell shape and atoms unchanged). ``False``: keep it as
-       given (see :doc:`orientation`).
+       setting before straining (see :doc:`orientation`). ``False``: keep it as given.
    * - ``frame``
-     - Frame of ``results["stiffness_matrix"]``: ``"cartesian"`` (default) – the frame of
-       your input structure; ``"standard"`` – the standard crystallographic setting, the one
-       tables of elastic constants use (see :doc:`orientation`).
+     - Frame of ``results["stiffness_matrix"]``: ``"cartesian"`` (default) – the frame the
+       calculation was done in, after any rotation by ``reorient``; ``"standard"`` – the
+       standard crystallographic setting, the one tables of elastic constants use (see
+       :doc:`orientation`).
    * - ``symprec``
      - Tolerance of the symmetry detection in Å (default ``1e-3``). Increase it (e.g.
        ``1e-2``) for a structure that is only approximately symmetric, such as one read from

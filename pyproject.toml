@@ -37,7 +37,7 @@ dependencies = [
 #   pip install "git+https://github.com/prabhat7iitm/elastic-vis.git"
 # (PyPI does not accept packages whose dependencies point to GitHub)
 test = ["pytest"]
-doc = ["sphinx", "sphinx-book-theme"]
+doc = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
 
 [project.urls]
 Source = "https://github.com/prnvrvs/elastic_ase"

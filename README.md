@@ -65,17 +65,12 @@ results = ec.read_results("runs")
 From the command line: `elastic-ase POSCAR --check` (symmetry only) or
 `elastic-ase POSCAR -c emt -o C.txt`.
 
-The [documentation](https://prnvrvs.github.io/elastic_ase/) has a
-[step-by-step example](https://prnvrvs.github.io/elastic_ase/examples/step_by_step.html),
-[an example for every crystal symmetry](https://prnvrvs.github.io/elastic_ase/examples/laue.html)
-and [for every calculator](https://prnvrvs.github.io/elastic_ase/examples/calculators.html),
-guides to [VASP and QE](https://prnvrvs.github.io/elastic_ase/guide/dft.html),
-[convergence](https://prnvrvs.github.io/elastic_ase/guide/convergence.html),
-[symmetry and orientation](https://prnvrvs.github.io/elastic_ase/guide/orientation.html) and
-[the results](https://prnvrvs.github.io/elastic_ase/guide/results.html), the
-[theory](https://prnvrvs.github.io/elastic_ase/theory.html), the
-[accuracy](https://prnvrvs.github.io/elastic_ase/testing.html) against other methods and
-experiment, and the [Python API](https://prnvrvs.github.io/elastic_ase/api/index.html).
+[Documentation](https://prnvrvs.github.io/elastic_ase/):
+
+- [Step-by-step example](https://prnvrvs.github.io/elastic_ase/examples/step_by_step.html)
+- [An example for every crystal symmetry](https://prnvrvs.github.io/elastic_ase/examples/laue.html) and [for every calculator](https://prnvrvs.github.io/elastic_ase/examples/calculators.html)
+- Guides: [VASP and QE run folders](https://prnvrvs.github.io/elastic_ase/guide/dft.html), [results](https://prnvrvs.github.io/elastic_ase/guide/results.html), [symmetry and orientation](https://prnvrvs.github.io/elastic_ase/guide/orientation.html), [convergence](https://prnvrvs.github.io/elastic_ase/guide/convergence.html)
+- [Theory](https://prnvrvs.github.io/elastic_ase/theory.html), [accuracy](https://prnvrvs.github.io/elastic_ase/testing.html), [Python API](https://prnvrvs.github.io/elastic_ase/api/index.html)
 
 Problems and questions: [issue tracker](https://github.com/prnvrvs/elastic_ase/issues).
 

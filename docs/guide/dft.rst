@@ -37,11 +37,13 @@ which output file to read and check, and which command to run.
      - ``espresso.pwo``: readable, expected cell, SCF converged
      - ``pw.x -in espresso.pwi > espresso.pwo``
    * - none
-     - the structure (``format=``) + your ``files``
+     - the attached calculator's own input if it is a file-based ASE calculator, otherwise
+       the structure (``format=``); plus your ``files``
      - the file given as ``output=`` (anything ``ase.io.read`` reads)
      - the one given as ``command=``
 
-``output="vasprun.xml"`` reads another file than the code's default.
+``output="vasprun.xml"`` reads a file other than the code's default; the VASP convergence
+check works only on OUTCAR.
 
 The run folders
 ---------------
@@ -71,13 +73,16 @@ VASP
 
       ENCUT  = 520        ! your converged values
       EDIFF  = 1E-8       ! tight: the energy differences are small
-      ISMEAR = 1; SIGMA = 0.1
-      IBRION = 2; ISIF = 2; NSW = 50   ! relax the atoms, keep the cell
-      EDIFFG = -1E-3                   ! force criterion (eV/Å)
-      LWAVE = .FALSE.; LCHARG = .FALSE.
+      ISMEAR = 1
+      SIGMA  = 0.1
+      IBRION = 2          ! relax the atoms
+      ISIF   = 2          ! keep the strained cell fixed
+      NSW    = 50         ! maximum relaxation steps
+      EDIFFG = -1E-3      ! force criterion (eV/Å)
+      LWAVE  = .FALSE.
+      LCHARG = .FALSE.
 
-   For a 1-atom cell (fcc, bcc metals) there is nothing to relax: use a single point
-   (``IBRION = -1``, no ``NSW``). Use the same KPOINTS and POTCAR for every run. In run
+   Use the same KPOINTS and POTCAR for every run. In run
    folders the ``relaxation`` option of ``ElasticConstants`` has no effect: the INCAR
    decides.
 3. Write, run, read:
@@ -97,7 +102,7 @@ If VASP stops with "I REFUSE TO CONTINUE WITH THIS SICK JOB" because its symmetr
 finds the direct and reciprocal lattices of a strained cell inconsistent – this can happen for
 cells kept in a non-standard orientation (``reorient=False``) – add ``ISYM = 0`` (or change
 ``SYMPREC``) to the INCAR and rerun the failed runs. The default rotation into the standard
-setting avoids it.
+setting usually avoids it.
 
 The POTCAR's element order is checked against the POSCAR, and a structure whose atoms are not
 grouped by element (e.g. Cu Au Cu) is refused, since no POTCAR can match its POSCAR – sort it
@@ -139,10 +144,8 @@ The input is written from an ASE ``Espresso`` calculator, whose pseudopotentials
    ec.run_jobs("runs")
    results = ec.read_results("runs")
 
-This is a single point in every run, right for a 1-atom cell (fcc, bcc metals). In a
-multi-atom cell the atoms move when the cell is strained: add ``"calculation": "relax"`` (and,
-e.g., ``"forc_conv_thr": 1e-4``) to ``"control"``, so pw.x relaxes the atoms inside every fixed
-strained cell; elastic_ase reads the final energy of each run. As for VASP, the
+This is a single point in every run. To relax the atoms inside every fixed strained cell, add
+``"calculation": "relax"`` (and, e.g., ``"forc_conv_thr": 1e-4``) to ``"control"``; elastic_ase reads the final energy of each run. As for VASP, the
 ``relaxation`` option of ``ElasticConstants`` has no effect in run folders.
 
 A pw.x output containing ``convergence NOT achieved`` is reported as failed. Shortcuts:
@@ -153,8 +156,8 @@ Other codes
 
 For a code without a ``code=`` setting, give the structure format, the extra input files, the
 output file and the command yourself. This works for any code whose structure file ASE can
-write and whose energy ASE can read from the output; there is no code-specific convergence
-check:
+write and whose energy ASE can read from the output. Outputs other than VASP OUTCARs and pw.x
+outputs get no convergence check:
 
 .. code-block:: python
 
@@ -165,6 +168,9 @@ check:
                    files={"<input file>": "<path>"})
    ec.run_jobs("runs")
    results = ec.read_results("runs")
+
+If the attached calculator is a file-based ASE calculator, its own input is written instead of
+the structure; pass ``calculator_inputs=False`` to write only the structure.
 
 Running, checking, repeating
 ----------------------------
@@ -222,7 +228,5 @@ continues where it stopped.
 Convergence
 -----------
 
-Do your own convergence tests (cutoff, k-points, smearing): converge the elastic constants
-themselves, not only the total energy, and use the same settings for every run. Metals need
-dense k-point meshes – a coarse mesh gives energy noise as large as the strain energy.
-:doc:`convergence` explains what to converge and gives a script for the k-mesh test.
+Converge the elastic constants, not only the total energy, and use the same settings for every
+run: :doc:`convergence`.

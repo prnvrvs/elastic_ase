@@ -1,9 +1,8 @@
-"""Elastic constants of corundum Al2O3 (Laue group -3m) with the GRACE-2L-OAM potential.
+"""Elastic constants of corundum Al2O3 (Laue class -3m) with the GRACE-2L-OAM potential.
 
 Needs: pip install elastic-ase tensorpotential
 Run:   python corundum_al2o3.py
 """
-from ase.constraints import FixSymmetry
 from ase.filters import FrechetCellFilter
 from ase.optimize import BFGS
 from ase.spacegroup import crystal
@@ -18,9 +17,7 @@ check_symmetry(atoms)
 
 # Step 2: relax
 atoms.calc = grace_fm("GRACE-2L-OAM")
-atoms.set_constraint(FixSymmetry(atoms))
 BFGS(FrechetCellFilter(atoms), logfile=None).run(fmax=1e-4)
-atoms.set_constraint()
 
 # Step 3: elastic constants
 ec = ElasticConstants(atoms, fmax=1e-4)
