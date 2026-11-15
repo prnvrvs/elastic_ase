@@ -1,7 +1,7 @@
 """Elastic constants of fcc aluminium with GPAW (DFT, PBE, plane waves).
 
 Needs: pip install elastic-ase gpaw (with its PAW datasets)
-Run:   mpiexec -n 6 gpaw python al_gpaw.py   (or: python al_gpaw.py)
+Run:   mpiexec -n 6 python al_gpaw.py   (or serial: python al_gpaw.py)
 """
 from ase.build import bulk
 from ase.filters import FrechetCellFilter
