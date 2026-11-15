@@ -199,6 +199,59 @@ class TestFeatures(unittest.TestCase):
         self.assertFalse(al.relaxes_atoms)
         self.assertEqual(al.optimizer.__name__, "BFGS")
 
+    def test_saved_energies_follow_relaxation_and_structure(self):
+        # energies saved with one relaxation setting are not reused for another, nor for a
+        # different structure in the same cell
+        def hcp():
+            atoms = bulk("Cu", "hcp", a=2.54, c=4.15)
+            atoms.calc = EMT()
+            return atoms
+        with tempfile.TemporaryDirectory() as tmp:
+            clamped = ElasticASE(hcp(), verbose=False, relaxation=False).calculate(workdir=tmp)
+            relaxed = ElasticASE(hcp(), verbose=False).calculate(workdir=tmp)
+            in_memory = ElasticASE(hcp(), verbose=False).calculate()
+            np.testing.assert_allclose(relaxed.stiffness_matrix, in_memory.stiffness_matrix, atol=1e-6)
+            self.assertGreater(abs(relaxed.standard_constants["C11"] - clamped.standard_constants["C11"]), 5)
+            ec = ElasticASE(hcp(), verbose=False, relaxation=False)
+            self.assertFalse(ec.is_complete(tmp))  # replaced by the relaxed ones: one energy per run
+            moved = hcp()
+            moved.positions[1] += [0.02, 0.0, 0.0]
+            ec = ElasticASE(moved, verbose=False, relaxation=False, reorient=False, symmetry="triclinic")
+            self.assertEqual(len(ec.missing(tmp)), len(ec.runs()))
+
+    def test_ground_state_relaxed_too(self):
+        # leftover forces in the input must not bias the constants: the unstrained cell is
+        # relaxed with the same criterion as the strained ones
+        atoms = bulk("Cu", "fcc", a=3.59, cubic=True)
+        atoms.calc = EMT()
+        reference = ElasticASE(atoms, verbose=False, symmetry="cubic", fmax=1e-4).calculate()
+        rattled = atoms.copy()
+        rattled.calc = EMT()
+        rattled.positions += np.random.default_rng(1).normal(0, 0.01, rattled.positions.shape)
+        rattled.set_cell(atoms.cell, scale_atoms=False)
+        result = ElasticASE(rattled, verbose=False, symmetry="cubic", reorient=False, fmax=1e-4).calculate()
+        for name in ("C11", "C12", "C44"):
+            self.assertAlmostEqual(result.standard_constants[name], reference.standard_constants[name], delta=0.5)
+
+    def test_strains_must_differ(self):
+        with self.assertRaises(ValueError):
+            ElasticASE(bulk("Al", "fcc", a=A0), verbose=False, strains=[-0.01, 0.005, 0.0050000004, 0.01])
+
+    def test_cli_strains_relaxation_and_csv(self):
+        from elastic_ase.cli import main
+        with tempfile.TemporaryDirectory() as tmp:
+            path, csv_path = os.path.join(tmp, "POSCAR"), os.path.join(tmp, "out.csv")
+            bulk("Cu", "hcp", a=2.54, c=4.15).write(path, format="vasp")
+            self.assertEqual(main([path, "-q", "--no-relaxation", "--strains", "-0.01,0,0.01",
+                                   "-o", csv_path]), 0)
+            with open(csv_path) as f:
+                header, row = [line.strip().split(",") for line in f][:2]
+            atoms = bulk("Cu", "hcp", a=2.54, c=4.15)
+            atoms.calc = EMT()
+            api = ElasticASE(atoms, verbose=False, relaxation=False, strains=[-0.01, 0, 0.01]).calculate()
+            self.assertAlmostEqual(float(row[header.index("C11_GPa")]), api.stiffness_matrix[0, 0], delta=0.01)
+            self.assertEqual(main([path, "-q", "--strains", "0.01"]), 1)  # clean error, no traceback
+
     def test_cli_calculator_option(self):
         from elastic_ase.cli import make_calculator
         self.assertIsInstance(make_calculator("emt"), EMT)

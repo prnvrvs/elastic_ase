@@ -1,9 +1,27 @@
 Changelog
 =========
 
-Unreleased
-----------
+0.0.4
+-----
 
+* Fixed: with ``relaxation=True`` the unstrained cell is now relaxed too, to the same force
+  criterion as the strained cells. Before, leftover forces in the input structure (e.g. from
+  a relaxation with a looser ``fmax``) biased every constant – for a 4-atom Cu cell with
+  forces up to 0.09 eV/Å, :math:`C_{44}` was 27 % too low.
+* Fixed: energies saved in a ``workdir`` were reused for runs with other relaxation settings
+  or other atom positions in the same cell. Each saved energy now also records the atoms and
+  the relaxation settings (``relaxation``, ``optimizer``, ``fmax``) and is reused only if they
+  match; energies saved by older versions count as unrelaxed runs.
+* Fixed: under MPI every process wrote ``energies.json`` (and ``save``, ``export_matrix``,
+  ``plot_fits``) at the same time, which could corrupt the file; now only rank 0 writes.
+* Fixed: the command line rejected negative strains (``--strains -0.01,0,0.01``); a
+  ``--plot`` run without elastic-vis and invalid strains now stop with a short error instead
+  of a traceback. ``-o result.json`` now also holds the independent constants, derived
+  properties, residual stress and every energy.
+* Strain values that are equal to 6 decimals are rejected (they would share one run name).
+* The residual-stress warning no longer says the bias is "a similar amount": the constants
+  can be off by several times the residual stress.
+* Requires ASE 3.23 or newer (the QE support uses ``EspressoProfile``); CI also tests Python 3.11.
 * Messages name Quantum ESPRESSO "QE", e.g. "QE SCF not converged"; an unknown ``code=``
   lists ``['QE', 'VASP']``. The code name works in any case (``"VASP"``, ``"vasp"``, ``"QE"``,
   ``"qe"``); the documentation uses ``code="VASP"`` and ``code="QE"``.
@@ -23,7 +41,7 @@ Unreleased
   the command line has ``--no-relaxation`` and ``--fmax``.
 * Fixed: an unconverged QE run whose output ASE cannot read was reported with
   ASE's read error; it is now reported as "SCF not converged" (the convergence check runs
-  before reading). Found with a real pw.x run.
+  before reading).
 * Fixed: a relative QE ``pseudo_dir`` (e.g. ``"pseudo"``) was looked up inside
   every run folder, so pw.x could not find the pseudopotentials; it is now taken relative to
   the folder you start from.
@@ -49,9 +67,8 @@ Unreleased
   instead of a traceback.
 * Documentation: shorter README pointing to the docs, new :doc:`citing` page, links to the
   Python/NumPy/ASE documentation in the API reference, layout fixed for narrow screens, and
-  the :doc:`testing` page extended (real VASP runs, the Mishin 1999 Al EAM potential compared
-  with its published constants, GRACE, GPAW).
-* Docs workflow runs only for pushes to ``main`` (a tag push cancelled the deployment).
+  the :doc:`testing` page extended (VASP, the Mishin 1999 Al EAM potential compared with its
+  published constants, GRACE, GPAW).
 
 0.0.1 (first release)
 ---------------------
@@ -73,7 +90,7 @@ Unreleased
   ``save`` / ``load``, ``ElasticConstants`` alias.
 * If spglib fails, the triclinic table is used instead of assuming cubic. At least three
   different strains are required.
-* Restructured: ``calculator.py`` (1,429 lines) is split into :mod:`~elastic_ase.analysis`
+* Restructured: ``calculator.py`` is split into :mod:`~elastic_ase.analysis`
   (energies to results), :mod:`~elastic_ase.rundir` (run folders), :mod:`~elastic_ase.codes`
   (one adapter per DFT code), :mod:`~elastic_ase.results` (``ElasticResults``),
   :mod:`~elastic_ase.report` and :mod:`~elastic_ase.plotting`; the public API is unchanged and

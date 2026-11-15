@@ -27,7 +27,8 @@ def plot_fits(fits, coefficients, filename="energy_strain.png", show=False):
     for ax in list(axes.flat)[len(names):]:
         ax.set_visible(False)
     fig.tight_layout()
-    if filename:
+    from ase.parallel import world
+    if filename and world.rank == 0:  # under MPI only one process writes the file
         fig.savefig(filename, dpi=150)
     if show:
         plt.show()

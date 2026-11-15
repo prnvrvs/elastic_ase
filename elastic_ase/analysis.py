@@ -76,7 +76,7 @@ def residual_stress_message(stress, tolerance=RESIDUAL_STRESS_TOL):
     pressure = stress["pressure_GPa"]
     text = f"pressure {pressure:+.2f} GPa" if pressure is not None else f"up to {worst:.2f} GPa"
     return (f"The reference cell is not stress-free ({text}, from the linear terms of the "
-            "energy-strain fits). The elastic constants are biased by a similar amount: relax "
+            "energy-strain fits). The elastic constants can be off by several times that: relax "
             "the structure (cell and atoms) with the same calculator and settings first.")
 
 

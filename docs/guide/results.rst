@@ -87,13 +87,14 @@ Residual stress
 
 The method assumes a stress-free reference cell. If it is not – the cell was not relaxed, or
 relaxed with other settings – the energy–strain curves pick up a linear term, and the
-constants are biased by about the size of the stress (1.6 GPa of tension changes the
-constants of EMT Al by about 0.8 GPa).
+constants are wrong: EMT Al with 1.6 GPa of tension gives :math:`C_{11}` and :math:`C_{44}`
+about 5 GPa (10–15 %) too low.
 
 The linear coefficient :math:`b` of each fit equals :math:`\sigma_0 \cdot e` for that
 deformation, so the fits themselves give the residual stress – no stress calculation is
 needed, and it also works on OUTCARs. elastic_ase reports the residual pressure
-:math:`P = -\operatorname{tr}\sigma_0/3` and warns above 0.5 GPa. The linear term is taken from
+:math:`P = -\operatorname{tr}\sigma_0/3` and warns when the stress along any deformation
+exceeds 0.5 GPa. The linear term is taken from
 a cubic fit, because with a quadratic fit the anharmonic cubic term would show up as a fake
 pressure at larger strains (0.3 GPa for Al at ±3 %).
 

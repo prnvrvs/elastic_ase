@@ -216,6 +216,9 @@ class ElasticASE:
             raise ValueError(f"frame must be 'cartesian' or 'standard', got {frame!r}")
 
         self.strains = np.array(sorted(float(s) for s in (DEFAULT_STRAINS if strains is None else strains)))
+        names = [f"{s:+.6f}" for s in self.strains]
+        if len(set(names)) != len(names):
+            raise ValueError(f"Strain values must all be different (to 6 decimals), got {self.strains.tolist()}")
         if len(np.unique(self.strains)) < 3:
             raise ValueError(
                 f"At least 3 different strain values are needed for the quadratic fit, got {self.strains.tolist()}"
@@ -348,7 +351,8 @@ class ElasticASE:
         energies saved by calculate(workdir=...) / run_pending().
         """
         filename = self._output_name(filename, code)
-        state = rundir.status(workdir, self.runs(), filename, self._code_for(code))
+        state = rundir.status(workdir, self.runs(), filename, self._code_for(code),
+                              settings=self._run_settings())
         self._say(f"[ElasticASE] {workdir}: {len(state['done'])} done, {len(state['failed'])} failed, "
                   f"{len(state['pending'])} pending (of {len(self.runs())})")
         for key, reason in state["failed"].items():
@@ -383,7 +387,7 @@ class ElasticASE:
     def _energy(self, atoms, key, calc):
         """Energy of one run with the attached calculator; raises on failure or no convergence."""
         atoms.calc = calc
-        if self.relaxes_atoms and key != GROUND_STATE:
+        if self.relaxes_atoms:  # the unstrained cell too, to the same force criterion
             self.optimizer(atoms, logfile=None).run(fmax=self.fmax)
         energy = float(atoms.get_potential_energy())
         if getattr(calc, "converged", None) is False:
@@ -395,6 +399,12 @@ class ElasticASE:
         """True when the atoms are relaxed inside the strained cells (relaxation=True and more
         than one atom)."""
         return self.relaxation and len(self.atoms) > 1
+
+    def _run_settings(self):
+        """Relaxation settings saved with every energy in energies.json."""
+        if not self.relaxes_atoms:
+            return dict(rundir.NO_RELAXATION)
+        return {"relaxation": True, "optimizer": self.optimizer.__name__, "fmax": float(self.fmax)}
 
     def _relaxation_text(self):
         if len(self.atoms) == 1:
@@ -424,7 +434,8 @@ class ElasticASE:
         calc = self._calculator()
         os.makedirs(workdir, exist_ok=True)
         all_runs = self.runs()
-        done = rundir.load_energies(workdir, all_runs)
+        settings = self._run_settings()
+        done = rundir.load_energies(workdir, all_runs, settings)
         if runs is None:
             todo = [(k, a) for k, a in all_runs if k not in done]
         else:
@@ -442,6 +453,7 @@ class ElasticASE:
                     run_dir = os.path.join(workdir, key)
                     os.makedirs(run_dir, exist_ok=True)
                     rundir.set_directory(calc, run_dir)
+                structure = rundir.fingerprint(atoms)  # before the atoms are relaxed
                 try:
                     energy = self._energy(atoms, key, calc)
                 except Exception as exc:
@@ -449,12 +461,14 @@ class ElasticASE:
                     rundir.record(workdir, key, error=error)
                     self._say(f"  [Failed] {key}: {error}")
                     continue
-                rundir.record(workdir, key, atoms=atoms, energy=energy)
+                rundir.record(workdir, key, atoms=atoms, energy=energy, settings=settings,
+                              structure=structure)
                 self._say(f"  [Done]   {key}: E = {energy:.6f} eV")
         finally:
             if has_directory:
                 calc.directory = original_directory
-        return rundir.status(workdir, all_runs)
+        # fresh runs: the relaxation has moved the atoms of all_runs
+        return rundir.status(workdir, self.runs(), settings=settings)
 
     def calculate(self, workdir=None):
         """
@@ -472,13 +486,14 @@ class ElasticASE:
         if workdir is not None:
             state = self.run_pending(workdir)
             if state["failed"] or state["pending"]:
-                lines = "\n".join(f"  {k}: {v}" for k, v in state["failed"].items())
+                lines = "\n".join([f"  {k}: {v}" for k, v in state["failed"].items()]
+                                  + [f"  {k}: no energy" for k in state["pending"]])
                 raise RuntimeError(
                     f"{len(state['failed']) + len(state['pending'])} of {n_runs} calculations "
-                    f"failed:\n{lines}\nThe successful energies are saved in {workdir}. Fix the problem, "
+                    f"failed or missing:\n{lines}\nThe successful energies are saved in {workdir}. Fix the problem, "
                     "then call run_pending(workdir) or calculate(workdir=...) again: only these are repeated."
                 )
-            return self._analyse(rundir.load_energies(workdir, self.runs()))
+            return self._analyse(rundir.load_energies(workdir, self.runs(), self._run_settings()))
 
         energies, failed = {}, {}
         for key, atoms in self.runs():
@@ -754,8 +769,11 @@ class ElasticASE:
             "energies_eV": r.energies,
             "results": _plain({k: v for k, v in r.items() if k not in ("energies", "fits")}),
         }
-        with open(filename, "w") as f:
-            json.dump(data, f, indent=1)
+        from ase.parallel import world
+        if world.rank == 0:  # under MPI only one process writes the file
+            with open(filename, "w") as f:
+                json.dump(data, f, indent=1)
+        world.barrier()
         self._say(f"[ElasticASE] Saved structure, energies and results to {filename}")
         return filename
 
@@ -777,7 +795,10 @@ class ElasticASE:
     def export_matrix(self, filepath: str):
         """Write the 6x6 stiffness matrix (frame as chosen) as a plain text file
         (numpy.loadtxt, elastic-vis)."""
-        np.savetxt(filepath, self._active_matrix, fmt="%.6f")
+        from ase.parallel import world
+        if world.rank == 0:  # under MPI only one process writes the file
+            np.savetxt(filepath, self._active_matrix, fmt="%.6f")
+        world.barrier()
         self._say(f"[ElasticASE] Exported 6x6 stiffness matrix to {filepath}")
 
     @property

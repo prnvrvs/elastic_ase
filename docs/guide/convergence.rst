@@ -2,7 +2,7 @@ Convergence tests
 =================
 
 Elastic constants come from very small energy differences. For fcc aluminium at ±1 % strain
-the energy changes by less than 1 meV per atom, while the total energy is usually converged
+the energy changes by about 0.2–2 meV per atom, depending on the deformation, while the total energy is usually converged
 to about 1 meV per atom. Settings that are "converged" for the total energy can therefore still
 give wrong elastic constants. **Converge the elastic constants themselves.**
 

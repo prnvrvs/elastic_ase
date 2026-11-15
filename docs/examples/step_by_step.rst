@@ -119,7 +119,7 @@ Step 5 – Check the result
 
 .. code-block:: python
 
-   ec.plot_fits("rutile_fits.png")
+   ec.plot_fits("rutile_tio2_fits.png")
 
 .. figure:: ../_static/examples/rutile_fits.png
    :width: 100%

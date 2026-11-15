@@ -20,10 +20,11 @@ Before you start
 
 **Converge the settings** of your calculator on the elastic constants themselves (k-mesh,
 smearing, cutoff; see :doc:`convergence`), then **relax the structure** – cell and atoms –
-with the same calculator and settings. The method
-assumes a stress-free reference; residual stress changes the fitted curvatures by about its
-own size. elastic_ase estimates the residual pressure from the fits and warns above 0.5 GPa
-(see :doc:`results`).
+with the same calculator and settings. The method assumes a stress-free reference: EMT
+aluminium with 1.6 GPa of residual tension (lattice constant 1.4 % too large) gives
+:math:`C_{11} = 47.6` instead of 53.2 GPa and :math:`C_{44} = 31.0` instead of 36.2 GPa.
+elastic_ase estimates the residual stress from the fits and warns when it exceeds 0.5 GPa
+along any deformation (see :doc:`results`).
 
 .. code-block:: python
 
@@ -186,8 +187,11 @@ pending runs in run order, and ``run_pending`` runs them (or ``runs=[...]`` for 
    ec.run_pending("runs")
    ec.calculate(workdir="runs")
 
-Saved energies are only reused for the same structure and strains: each entry stores its cell
-and number of atoms and is ignored if they do not match.
+Saved energies are only reused for the same run: each entry stores the strained cell, the
+atoms (elements and positions before relaxation) and the relaxation settings
+(``relaxation``, ``optimizer``, ``fmax``), and is ignored if any of them differ. The
+calculator and its settings are not stored: use a new ``workdir`` for every calculator
+setting, for example in a convergence test.
 
 A typical loop for a calculator that sometimes fails:
 

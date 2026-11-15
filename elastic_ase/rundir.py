@@ -9,6 +9,7 @@ Layout of a work directory::
       failed.json                   reasons of failed live runs
       elastic_ase_runs.json         symmetry, strains, run names
 """
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -44,33 +45,63 @@ def read_json(workdir, name):
 
 
 def write_json(workdir, name, data):
-    """Write atomically, so a killed job never leaves a half-written file."""
+    """Write atomically, so a killed job never leaves a half-written file. Under MPI only
+    rank 0 writes; the other ranks wait until the file is there."""
+    from ase.parallel import world
     path = os.path.join(workdir, name)
-    tmp = path + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(data, f, indent=1)
-    os.replace(tmp, path)
+    if world.rank == 0:
+        tmp = f"{path}.{os.getpid()}.tmp"
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=1)
+        os.replace(tmp, path)
+    world.barrier()
 
 
-def load_energies(workdir, runs):
-    """Saved energies in workdir/energies.json that belong to these runs ([(key, atoms)]):
-    an entry is used only if its cell and number of atoms match the run."""
+def fingerprint(atoms):
+    """Short hash of the atoms (elements and scaled positions) of a run before any relaxation,
+    so saved energies are not reused for a different structure in the same cell."""
+    data = np.round(np.asarray(atoms.get_scaled_positions(wrap=True), float), 6)
+    data = np.where(data >= 1.0, 0.0, data) + 0.0  # 1.0 and -0.0 after rounding
+    digest = hashlib.sha1(np.asarray(atoms.numbers, np.int64).tobytes() + data.tobytes())
+    return digest.hexdigest()[:16]
+
+
+NO_RELAXATION = {"relaxation": False}
+
+
+def load_energies(workdir, runs, settings=None):
+    """Saved energies in workdir/energies.json that belong to these runs ([(key, atoms)]).
+
+    An entry is used only if its cell, atoms (elements and positions before relaxation) and
+    relaxation settings match the run; entries saved by older versions carry no atoms or
+    settings and count as unrelaxed runs."""
+    settings = NO_RELAXATION if settings is None else settings
     expected = dict(runs)
     energies = {}
     for key, entry in read_json(workdir, ENERGY_FILE).items():
-        if key in expected and same_cell(entry["cell"], expected[key].get_cell()) \
-                and entry.get("natoms") == len(expected[key]):
-            energies[key] = float(entry["energy"])
+        if key not in expected:
+            continue
+        atoms = expected[key]
+        if not same_cell(entry["cell"], atoms.get_cell()) or entry.get("natoms") != len(atoms):
+            continue
+        if "atoms" in entry and entry["atoms"] != fingerprint(atoms):
+            continue
+        if entry.get("settings", NO_RELAXATION) != settings:
+            continue
+        energies[key] = float(entry["energy"])
     return energies
 
 
-def record(workdir, key, atoms=None, energy=None, error=None):
-    """Save a finished run (energy) or a failed one (error)."""
+def record(workdir, key, atoms=None, energy=None, error=None, settings=None, structure=None):
+    """Save a finished run (energy) or a failed one (error). ``structure`` is the fingerprint
+    of the run's atoms before relaxation, ``settings`` the relaxation settings."""
     saved = read_json(workdir, ENERGY_FILE)
     failed = read_json(workdir, FAILED_FILE)
     if error is None:
         saved[key] = {"energy": float(energy), "cell": np.asarray(atoms.get_cell()).tolist(),
-                      "natoms": len(atoms)}
+                      "natoms": len(atoms),
+                      "atoms": structure if structure is not None else fingerprint(atoms),
+                      "settings": NO_RELAXATION if settings is None else settings}
         failed.pop(key, None)
         write_json(workdir, ENERGY_FILE, saved)
     else:
@@ -110,7 +141,7 @@ def read_outputs(workdir, runs, filename, code=None):
     return energies, problems
 
 
-def status(workdir, runs, filename=None, code=None):
+def status(workdir, runs, filename=None, code=None, settings=None):
     """{"done": [...], "failed": {run: reason}, "pending": [...]} for these runs.
 
     From the output files when ``filename`` is given (missing output = pending, unusable =
@@ -118,7 +149,7 @@ def status(workdir, runs, filename=None, code=None):
     """
     keys = [key for key, _ in runs]
     if filename is None:
-        done = load_energies(workdir, runs)
+        done = load_energies(workdir, runs, settings)
         saved_failures = read_json(workdir, FAILED_FILE)
         failed = {k: saved_failures[k] for k in keys if k not in done and k in saved_failures}
     else:

@@ -12,6 +12,8 @@ on:
     paths:
       - "docs/**"
       - "elastic_ase/**"
+      - "pyproject.toml"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -20,7 +22,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # one group per branch or pull request, so a pull request cannot cancel the deployment from main
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

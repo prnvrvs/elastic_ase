@@ -8,10 +8,11 @@ import sys
 import argparse
 import csv
 import importlib
+import importlib.util
 import json
 import numpy as np
 from ase.io import read
-from elastic_ase.calculator import ElasticASE
+from elastic_ase.calculator import ElasticASE, _plain
 from elastic_ase.symmetry import check_symmetry
 
 
@@ -131,6 +132,11 @@ def parse_args(args=None):
         help="Show plots interactively on screen."
     )
 
+    args = list(sys.argv[1:] if args is None else args)
+    for i, arg in enumerate(args[:-1]):
+        if arg == "--strains" and args[i + 1].startswith("-"):
+            args[i:i + 2] = [f"--strains={args[i + 1]}"]
+            break
     return parser.parse_args(args)
 
 
@@ -172,20 +178,27 @@ def main(args=None):
         print(f"Error: cannot create calculator '{parsed.calculator}': {exc}{hint}", file=sys.stderr)
         return 1
 
-    # Parse strains
-    strain_list = [float(x.strip()) for x in parsed.strains.split(",") if x.strip()]
+    if parsed.plot and importlib.util.find_spec("elastic_vis") is None:
+        print("Error: --plot needs elastic-vis: "
+              'pip install "git+https://github.com/prabhat7iitm/elastic-vis.git"', file=sys.stderr)
+        return 1
 
-    # Run ElasticASE
-    el = ElasticASE(
-        atoms,
-        symmetry=parsed.symmetry,
-        strains=strain_list,
-        reorient=getattr(parsed, "reorient", True),
-        relaxation=getattr(parsed, "relaxation", True),
-        fmax=parsed.fmax,
-        frame=parsed.frame,
-        verbose=not parsed.quiet
-    )
+    # Parse strains and set up
+    try:
+        strain_list = [float(x.strip()) for x in parsed.strains.split(",") if x.strip()]
+        el = ElasticASE(
+            atoms,
+            symmetry=parsed.symmetry,
+            strains=strain_list,
+            reorient=getattr(parsed, "reorient", True),
+            relaxation=getattr(parsed, "relaxation", True),
+            fmax=parsed.fmax,
+            frame=parsed.frame,
+            verbose=not parsed.quiet
+        )
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     results = el.calculate()
 
     # Save output if requested
@@ -205,7 +218,11 @@ def main(args=None):
                 "stability_criteria": str(el.stability_criteria),
                 "polycrystalline_averages": {k: float(v) for k, v in el.averages.items()},
                 "directional_properties": {k: float(v) if isinstance(v, (int, float, np.floating)) else v for k, v in el.directional.items()} if el.directional else None,
-                "r2_scores": {k: float(v) for k, v in el.r2_scores.items()}
+                "r2_scores": {k: float(v) for k, v in el.r2_scores.items()},
+                "independent_constants": _plain(results["independent_constants"]),
+                "derived_properties": _plain(results["derived_properties"]),
+                "residual_stress": _plain(results["residual_stress"]),
+                "energies_eV": _plain(results["energies"]),
             }
             with open(out_path, "w") as f:
                 json.dump(serializable, f, indent=2)

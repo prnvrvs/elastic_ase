@@ -28,11 +28,11 @@ which output file to read and check, and which command to run.
      - ``write_inputs`` writes
      - ``status`` / ``read_results`` read and check
      - default ``command``
-   * - ``"vasp"``
+   * - ``"VASP"``
      - ``POSCAR`` + your ``files`` (or the full input from an ASE ``Vasp`` calculator)
      - ``OUTCAR``: readable, expected cell, electronic loop converged
      - ``vasp_std``
-   * - ``"qe"``
+   * - ``"QE"``
      - ``espresso.pwi`` from an ASE ``Espresso`` calculator
      - ``espresso.pwo``: readable, expected cell, SCF converged
      - ``pw.x -in espresso.pwi > espresso.pwo``
@@ -63,18 +63,23 @@ VASP
 
 1. Relax the structure with your converged settings (``ISIF = 3``), and start from its
    ``CONTCAR``.
-2. Prepare one INCAR for the single-point runs, e.g.
+2. Prepare one INCAR for all runs. In a multi-atom cell the atoms move when the cell is
+   strained, so relax them inside the fixed strained cell (``ISIF = 2``) to get the
+   relaxed-ion constants:
 
    .. code-block:: text
 
       ENCUT  = 520        ! your converged values
-      EDIFF  = 1E-7       ! tight: the energy differences are small
+      EDIFF  = 1E-8       ! tight: the energy differences are small
       ISMEAR = 1; SIGMA = 0.1
-      ! single point; or IBRION = 2, ISIF = 2, NSW = 50 to relax the atoms
-      IBRION = -1
+      IBRION = 2; ISIF = 2; NSW = 50   ! relax the atoms, keep the cell
+      EDIFFG = -1E-3                   ! force criterion (eV/Å)
       LWAVE = .FALSE.; LCHARG = .FALSE.
 
-   and your KPOINTS and POTCAR. The same files are used for every run.
+   For a 1-atom cell (fcc, bcc metals) there is nothing to relax: use a single point
+   (``IBRION = -1``, no ``NSW``). Use the same KPOINTS and POTCAR for every run. In run
+   folders the ``relaxation`` option of ``ElasticConstants`` has no effect: the INCAR
+   decides.
 3. Write, run, read:
 
    .. code-block:: python
@@ -133,6 +138,12 @@ The input is written from an ASE ``Espresso`` calculator, whose pseudopotentials
    ec.write_inputs("runs")
    ec.run_jobs("runs")
    results = ec.read_results("runs")
+
+This is a single point in every run, right for a 1-atom cell (fcc, bcc metals). In a
+multi-atom cell the atoms move when the cell is strained: add ``"calculation": "relax"`` (and,
+e.g., ``"forc_conv_thr": 1e-4``) to ``"control"``, so pw.x relaxes the atoms inside every fixed
+strained cell; elastic_ase reads the final energy of each run. As for VASP, the
+``relaxation`` option of ``ElasticConstants`` has no effect in run folders.
 
 A pw.x output containing ``convergence NOT achieved`` is reported as failed. Shortcuts:
 ``qe_input``, ``qe_status``, ``qe_output``.

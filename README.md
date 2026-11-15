@@ -1,6 +1,6 @@
 # elastic_ase
 
-Second-order elastic constants ($C_{ij}$) from energy–strain calculations with ASE
+Second-order elastic constants (C<sub>ij</sub>) from energy–strain calculations with ASE
 calculators. elastic_ase is the ASE counterpart of
 [elastic_vasp](https://github.com/prnvrvs/elastic_vasp): the same deformation tables and
 analysis, with the energies from an ASE calculator (run in memory) or from DFT run folders
@@ -11,7 +11,7 @@ analysis, with the energies from an ASE calculator (run in memory) or from DFT r
 ## Features
 
 - Symmetry detection with spglib and deformation tables for all crystal systems: cubic,
-  hexagonal, tetragonal (4/mmm and 4/m), trigonal (with $C_{14}$ and $C_{15}$),
+  hexagonal, tetragonal (4/mmm and 4/m), trigonal (with C<sub>14</sub> and C<sub>15</sub>),
   orthorhombic, monoclinic, triclinic; an orientation-aware automatic mode.
 - The structure is rotated rigidly into the standard setting (cell, atoms and per-atom data
   unchanged); without rotation, an exact check warns when a table does not fit the

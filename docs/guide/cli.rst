@@ -46,8 +46,9 @@ Options
    * - ``--fmax``
      - Force criterion of that relaxation in eV/Å (default ``1e-3``).
    * - ``-o``, ``--output``
-     - Save the results: ``.json`` (everything), ``.csv`` (one row of moduli and
-       :math:`C_{ij}`) or any other extension (plain 6×6 matrix).
+     - Save the results: ``.json`` (stiffness and compliance matrices, constants, stability,
+       averages, derived properties, residual stress and every energy), ``.csv`` (one row of
+       moduli and :math:`C_{ij}`) or any other extension (plain 6×6 matrix).
    * - ``-q``, ``--quiet``
      - No report.
 

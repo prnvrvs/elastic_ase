@@ -104,7 +104,7 @@ Script: :download:`al_mace.py <scripts/al_mace.py>`.
 GPAW (DFT)
 ----------
 
-PBE with plane waves. Metals need dense k-point meshes: for Al the shear constants still change by a few GPa between 30³ and 32³ k-points. Converge the mesh on the elastic constants (:doc:`../guide/convergence`). Run in parallel with ``mpiexec -n 6 python al_gpaw.py``; the report is printed once.
+PBE with plane waves. Metals need dense k-point meshes: for Al the shear constants still change by up to 5 GPa between 28³ and 32³ k-points. Converge the mesh on the elastic constants (:doc:`../guide/convergence`). Run in parallel with ``mpiexec -n 6 python al_gpaw.py``; the report is printed once.
 
 The calculator (the rest is as above):
 
@@ -176,7 +176,10 @@ yourself and call ``read_results`` afterwards (:doc:`../guide/dft`).
      - 68.5
      - 24.2
 
-These settings (12³ k-points, 40 Ry) are a quick start, not converged for Al.
+These settings (12³ k-points, 40 Ry) are a quick start, not converged for Al. Unlike the
+other scripts, this one skips step 1: it starts from the lattice constant 4.04 Å, so a
+residual pressure of 0.1 GPa remains. For real work, relax the cell first with the same
+settings (pw.x ``"calculation": "vc-relax"``) and start from that structure.
 Script: :download:`al_qe.py <scripts/al_qe.py>`. VASP works the same way with ``code="VASP"``
 and your INCAR, KPOINTS and POTCAR (:doc:`../guide/dft`).
 
