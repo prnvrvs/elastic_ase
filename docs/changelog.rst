@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+* Messages name Quantum ESPRESSO "QE", e.g. "QE SCF not converged"; an unknown ``code=``
+  lists ``['QE', 'VASP']``. The code name works in any case (``"VASP"``, ``"vasp"``, ``"QE"``,
+  ``"qe"``); the documentation uses ``code="VASP"`` and ``code="QE"``.
+* Documentation: every option of ``ElasticConstants`` in one annotated call
+  (:doc:`guide/calculators`); how to choose the strain range, with a strain-range scan
+  (:ref:`choosing-the-strain-range`); the matrix of every volume-conserving deformation
+  (:doc:`theory`).
+
 0.0.3
 -----
 

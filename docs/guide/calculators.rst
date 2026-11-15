@@ -102,7 +102,8 @@ Two typical changes:
      - Strain values :math:`\delta` applied with every deformation (at least 3 different
        ones; default ``[-0.01, -0.005, 0, 0.005, 0.01]``). Use values symmetric around zero;
        ±0.5–1 % is a good range for most solids. Smaller strains make the fit sensitive to
-       numerical noise, larger ones bring in anharmonic terms.
+       numerical noise, larger ones bring in anharmonic terms (see
+       :ref:`choosing-the-strain-range`).
    * - ``relaxation``
      - ``True`` (default): relax the atoms inside every strained cell – *relaxed-ion*
        constants, the ones to compare with experiment. The atoms of a multi-atom cell move
