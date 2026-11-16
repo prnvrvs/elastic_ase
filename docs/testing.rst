@@ -11,8 +11,8 @@ The other common way to compute elastic constants is the **stress–strain** met
 each strain component, compute the stress, and take :math:`C_{ij}` from the slope of the
 stress. With the same potential (GRACE-2L-OAM), the same relaxed structures and the atoms
 relaxed in every strained cell (strains ±0.5 % for the stress–strain method), the two methods
-agree for the nine real crystals of :doc:`examples/laue` to within 1 % of the largest
-constant: 0.02–1.3 GPa, and 2.7 GPa for monoclinic ZrO₂. The differences come from the two
+agree for all 11 crystals of :doc:`examples/laue` to within 1 % of the largest constant:
+0.02–1.3 GPa, and 2.7 GPa for monoclinic ZrO₂. The differences come from the two
 methods sampling the anharmonic (higher-order) terms differently.
 
 Same potential, published constants
